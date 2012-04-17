@@ -1,0 +1,101 @@
+-- Routing Table --------------------------------------------
+
+local table = loader.requireApi("table")
+
+
+local vtable = {}
+vtable.__index = vtable
+
+function vtable:getRoute(dst)
+  return self.gateways[dst]
+end
+
+function vtable:getRouteInt(dst)
+  if self.myID==dst then return dst, -1 end
+  if self.routingDistMaps[dst] then return dst, 0 end
+  local dist
+  local node
+  for n, map in pairs(self.routingDistMaps) do
+    local ndist = map[dst]
+    if ndist and (not dist or ndist<dist) then
+      node,dist = n, ndist
+    end
+  end
+  return node, dist
+end
+
+function vtable:updateRoutingTable(changes)
+  local changed = false
+  local function assign(table, key, value)
+    if table[key]==value then return end
+    changed = true
+    table[key] = value
+  end
+  for dst, _ in pairs(changes) do
+    local node, hops = self:getRouteInt(dst)
+    if node then hops = hops + 1 end
+    assign(self.gateways, dst, node)
+    assign(self.hops, dst, hops)
+  end
+  return changed
+end
+
+function vtable:routingMarkChanges(changes, distMap)
+  if not distMap then return end
+  for node, _ in pairs(distMap) do
+    changes[node] = true
+  end
+end
+
+function vtable:addRouting(node, distMap)
+  local changes = {[node]=true}
+  self:routingMarkChanges(changes, self.routingDistMaps[node])
+  self.routingDistMaps[node] = distMap
+  self:routingMarkChanges(changes, distMap)
+  local changed = self:updateRoutingTable(changes)
+  return changed
+end
+
+function vtable:removeRouting(node)
+  self:addRouting(node, nil)
+end
+
+function new(myID)
+  local table = {
+    myID = myID,
+    -- for each destination store next hop and number of hops to destination
+    gateways = {},
+    hops = {},
+    -- for each node a mapping from dst to hops
+    routingDistMaps = {}
+  }
+  setmetatable(table, vtable)
+  table:updateRoutingTable({[myID]=true})
+  return table
+end
+
+__lunit = {}
+
+function __lunit.routing()
+  local rt = new(6)
+  local function check(expected, dest, hops)
+    lunit.areEqual(expected, rt:getRoute(dest))
+    if hops then lunit.areEqual(hops, rt.hops[dest]) end
+  end
+  check(6, 6, 0)
+  check(nil, 1)
+  check(nil, 2)
+  lunit.areEqual(true, rt:addRouting(1, {[2]=2, [3]=2, [4]=2}))
+  check(1, 1, 1)
+  check(1, 2, 3)
+  lunit.areEqual(true, rt:addRouting(2, {[3]=1, [4]=3}))
+  check(1, 1)
+  check(2, 2)
+  check(2, 3)
+  check(1, 4)
+  lunit.areEqual(false, rt:addRouting(2, {[3]=1, [4]=4}))
+  check(1, 1)
+  check(2, 2)
+  check(2, 3)
+  check(1, 4)
+end

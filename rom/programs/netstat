@@ -1,0 +1,20 @@
+local minet = minet
+local routing = minet.routing
+
+local function showNode(node)
+  if routing.gateways[node] then
+    print(string.format("%4d: %4d %2d", node, routing.gateways[node], routing.hops[node]))
+  else
+    print(string.format("%4d:    -  -", node))
+  end
+end
+
+print("dest: gate hops")
+for node, _ in pairs(minet.neighbors) do
+  showNode(node)
+end
+for node, _ in pairs(routing.gateways) do
+  if not minet.neighbors[node] then
+    showNode(node)
+  end
+end

@@ -1,0 +1,125 @@
+-- Advanced Serialization
+
+-- Purpose:
+--   convert between object graph and string (lua chunk) representation
+-- Improvements:
+--   Correct string serialization
+--   Compact array representation
+
+-- Todo:
+--   allow multiple references pointing to same table
+--   allow cycles
+
+
+local keywords = {
+  "and", "break", "do", "else", "elseif", "end", "false", "for",
+  "function", "goto", "if", "in", "local", "nil", "not", "or",
+  "repeat", "return", "then", "true", "until", "while"
+}
+
+local keydict = {}
+for _, k in ipairs(keywords) do
+  keydict[k] = true
+end
+
+local function escapeString(string)
+  string = string.gsub(string, "\\", "\\\\")
+  string = string.gsub(string, "\n", "\\n")
+  return string.gsub(string, '"', '\\"')
+end
+
+local serializeImpl
+
+local function serializeTable(object, discovered)
+  if discovered[object] then
+    error("Cannot serialize table with recursive entries")
+  end
+  discovered[object] = true
+
+  local done = {}
+  local r = {}
+  for k, v in ipairs(object) do
+    r[#r+1] = serializeImpl(v, discovered)
+    done[k] = true
+  end
+  for k, v in pairs(object) do
+    if not done[k] then
+      local key = k
+      if type(k)~="string" or not string.match(k, "^[a-zA-Z][a-zA-Z0-9_]*$") or keydict[k] then
+        key = "["..serializeImpl(k, discovered).."]"
+      end
+      r[#r+1] = key.."="..serializeImpl(v, discovered)
+    end
+  end
+  return "{"..table.concat(r, ",").."}"
+end
+
+-- local function (see forward declaration above)
+function serializeImpl(object, discovered)
+  local t = type(object)
+  if t == "table" then
+    return serializeTable(object, discovered)
+  elseif t == "string" then
+    return "\""..escapeString(object).."\""
+  elseif t == "number" or t == "boolean" or t == "nil" then
+    return tostring(object)
+  else
+    error("Cannot serialize type "..t)
+  end
+end
+
+function serialize(object)
+  return serializeImpl(object, {})
+end
+
+local function loadStringWithEnvironment(str, name, env)
+  if setfenv then
+    local func, e = loadstring(str, name)
+    if func then setfenv(func, env) end
+    return func, e
+  else
+    load(str, name, "t", env)
+  end
+end
+
+function unserialize(s)
+  local func, e = loadStringWithEnvironment("return "..s, "serialize", {})
+  if not func then return s end
+  return func()
+end
+
+local function testSerialize(expected, object)
+  local str = serialize(object)
+  lunit.areEqual(expected, str)
+  return unserialize(str)
+end
+
+local function testScalar(expected, object)
+  lunit.areEqual(object, testSerialize(expected, object))
+end
+
+__lunit = {}
+
+function __lunit.scalar()
+  testScalar("1", 1)
+  testScalar("1.2", 1.2)
+  testScalar('"a"', "a")
+  testScalar('"\\""', '"')
+  testScalar("true", true)
+  testScalar("false", false)
+  testScalar("nil", nil)
+end
+
+function __lunit.table()
+  testScalar("{}", {})
+  testScalar("{0}", {0})
+  testScalar('{"a"}', {'a'})
+  testScalar("{1,2,a=4,[7]=3}", {[7]=3,a=4,[1]=1,[2]=2})
+  testScalar('{["and"]=1}', {["and"]=1})
+end
+
+function __lunit.table2()
+  testSerialize("{{}}", {{}})
+  testSerialize("{[{}]={}}", {[{}]={}})
+  testSerialize("{a={0,1,2},b={7,6,2}}", {a={0,1,2},b={7,6,2}})
+end

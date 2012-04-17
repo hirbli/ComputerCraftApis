@@ -1,0 +1,34 @@
+-- Persistency
+
+-- Purpose:
+--   store and read structured data from file to survive shutdowns
+
+local ser = loader.requireApi("serializer")
+
+local vtable = {}
+vtable.__index = vtable
+
+function vtable:load()
+  local file = io.open(self.path, "r")
+  if not file then return false end
+  local str = file:read()
+  file:close()
+  self.value = ser.unserialize(str)
+  return true
+end
+
+function vtable:store()
+  local str = ser.serialize(self.value)
+  local file = io.open(self.path, "w")
+  file:write(str)
+  file:close()
+end
+
+function new(name, initialValue)
+  local path = "/persistency/"
+  if not fs.exists(path) then fs.makeDir(path) end
+  local p = {value=initialValue, name=name, path=path..name}
+  setmetatable(p, vtable)
+  p:load()
+  return p
+end

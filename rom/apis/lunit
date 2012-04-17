@@ -1,0 +1,57 @@
+function areEqual(expected, actual)
+  if type(expected)==type(actual) and type(expected)=="table" then
+    for k, v in pairs(expected) do
+      local a = actual[k]
+      if a == nil then error("missing table entry "..k) end
+      areEqual(v, a)
+    end
+    for k, v in pairs(actual) do
+      if expected[k]==nil then error("extraneous table entry "..k) end
+    end
+  else
+    if expected == actual then return end
+    error("Values not equal: expected="..tostring(expected)..", actual="..tostring(actual))
+  end
+end
+
+function countFunction()
+  local table = {count=0}
+  function table.func() table.count = table.count + 1 end
+  return table
+end
+
+local function runTest(name, func)
+  func()
+  local success, error = pcall(func)
+  print(success, name, error)
+end
+
+local function runTests(table, path)
+  for k, v in pairs(table) do
+    if type(k)=="string" and type(v)=="function" then
+      runTest(path.."."..k, v)
+    end
+  end
+end
+
+local function runTable(table, discovered, path)
+  if discovered[table] then return end
+  discovered[table] = true
+  for k, v in pairs(table) do
+    if k=="__lunit" then
+      runTests(v, path)
+    elseif type(k)=="string" and type(v)=="table" then
+      runTable(v, discovered, path.."."..k)
+    end
+  end
+end
+
+function run(start)
+  if not start then
+    runTable(_G, {}, "_G")
+  elseif type(start)=="table" then
+    runTable(start, {}, "")
+  else
+    error("start must be nil or a table")
+  end
+end

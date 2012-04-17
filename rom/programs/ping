@@ -1,0 +1,16 @@
+local function usage(message)
+  if message then print("Error: "..message) end
+  print("Usage: ping <destination>")
+end
+
+local function receiveResponse(header, payload)
+  print("Answer: "..payload)
+end
+
+local args = {...}
+if #args~=1 then return usage() end
+local dest = tonumber(args[1])
+minet.receiveProtocol.pong:add(receiveResponse)
+minet.sendMessage(dest, "ping", "gaga")
+os.sleep(2)
+minet.receiveProtocol.pong:remove(receiveResponse)

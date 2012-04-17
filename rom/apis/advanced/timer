@@ -1,0 +1,54 @@
+-- Timer class
+
+-- Purpose:
+--   provide object oriented access to the timer functionality
+
+loader.requireApi("dispatcher")
+
+local vtable = {}
+vtable.__index = vtable
+
+local timersByID = {}
+
+function vtable:startTimer(time)
+  local id = os.startTimer(time)
+  timersByID[id] = self
+end
+
+function vtable:startPeriodic(period)
+  self.period = period
+  self:startTimer(period)
+end
+
+function vtable:setAlarm(time)
+  local id = os.setAlarm(time)
+  timersByID[id] = self
+end
+
+function new(callback)
+  return setmetatable({callback=callback}, vtable)
+end
+
+local function timerExpired(event, id)
+  local timer = timersByID[id]
+  if not timer then return end
+  timersByID[id] = nil
+  local success, error = pcall(timer.callback, timer)
+  if not success then
+    print("error in timer callback: "..error)
+  end
+  if timer.period then
+    timer:startTimer(timer.period)
+  end
+end
+
+dispatcher.filteredEvents.timer:add(timerExpired)
+dispatcher.filteredEvents.alarm:add(timerExpired)
+
+__lunit = {}
+
+function __lunit.create()
+  local f = function() end
+  local t = new(f)
+  lunit.areEqual("function", type(t.startTimer))
+end

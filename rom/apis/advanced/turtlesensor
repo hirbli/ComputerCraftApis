@@ -1,0 +1,74 @@
+-- Turtle Sensor
+
+-- Purpose:
+--   Find out as much as possible about the environment of the turtle.
+--   Registers with the move / turn events to trigger sensing.
+
+if not turtle then return false end
+
+loader.requireApi("turtleplus")
+local turtle = turtle
+local rednet = rednet
+local peripheral = peripheral
+
+local function sensePeripherals(direction)
+  local device = peripheral.getType(direction)
+  if device=="modem" then return nil end
+  if not device then return false end
+  return device
+end
+
+local compareFunc = {
+  top=turtle.compareUp,
+  bottom=turtle.compareDown,
+  front=turtle.compare
+}
+
+local function compareBlock(direction)
+  local compare = compareFunc[direction]
+  for slot=1,9 do
+    turtle.select(slot)
+    if compare() then return slot end
+  end
+  return nil
+end
+
+local detectFunc = {
+  top=turtle.detectUp,
+  bottom=turtle.detectDown,
+  front=turtle.detect
+}
+
+local function senseBlock(direction)
+  local detectFunc = detectFunc[direction]
+  if not detectFunc then return nil end
+  local detect = detectFunc()
+  if not detect then return false end
+  if false then
+    local oldSlot = turtle.getSelectedSlot()
+    detect = compareBlock(direction)
+    turtle.select(oldSlot)
+  end
+  return detect or true
+end
+
+local function senseInt(direction)
+  local result = sensePeripherals(direction)
+  if result then return result end
+  return senseBlock(direction)
+end
+
+local function sense(direction)
+  local result = senseInt(direction)
+  print("sense('"..direction.."')="..tostring(result))
+  return result
+end
+
+local function senseAll()
+  sense("top")
+  sense("bottom")
+  sense("front")
+end
+
+turtle.moved:add(senseAll)
+turtle.turned:add(senseAll)

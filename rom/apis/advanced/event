@@ -1,0 +1,85 @@
+loader.requireApi("autotable")
+
+local event = {}
+event.__index = event
+
+function event:add(handler)
+  if type(handler)~="function" then error("handler must be a function, but is "..tostring(handler)) end
+  self[handler] = (self[handler] or 0) + 1
+end
+
+function event:remove(handler)
+  local count = self[handler]
+  if not count then error("can not remove event handler") end
+  count = count - 1
+  if count==0 then count=nil end
+  self[handler] = count
+end
+
+function event:call(...)
+  for h, c in pairs(self) do
+    for i=1,c do
+      h(...)
+    end
+  end
+end
+
+function event:pcall(...)
+  for h, c in pairs(self) do
+    for i=1,c do
+      pcall(h, ...)
+    end
+  end
+end
+
+function new()
+  return setmetatable({}, event)
+end
+
+function newTable()
+  return autotable.new(new)
+end
+
+__lunit = {}
+
+function __lunit.singleEvent()
+  local e = new()
+  local count = 0
+  local f = function() count = count + 1 end
+  local farg = function(a) lunit.areEqual(7, a) end
+  e:call()
+  lunit.areEqual(0, count)
+  e:add(f)
+  e:call()
+  lunit.areEqual(1, count)
+  e:add(f)
+  e:call()
+  lunit.areEqual(3, count)
+  e:remove(f)
+  e:call()
+  lunit.areEqual(4, count)
+  e:remove(f)
+  e:call()
+  lunit.areEqual(4, count)
+  e:add(farg)
+  e:call(7)
+  e:pcall(6)
+end
+
+function __lunit.tableEvent()
+  local e = newTable()
+  local count = 0
+  local f = function() count = count + 1 end
+  e.a:call()
+  e.a:add(f)
+  lunit.areEqual(0, count)
+  e.a:call()
+  lunit.areEqual(1, count)
+  e.b:add(f)
+  lunit.areEqual(1, count)
+  e.b:call()
+  lunit.areEqual(2, count)
+  e.b:remove(f)
+  e.b:call()
+  lunit.areEqual(2, count)
+end

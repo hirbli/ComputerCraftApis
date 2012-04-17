@@ -1,0 +1,103 @@
+-- Advanced API loader
+
+-- Purpose:
+--   same as bios.lua API loader
+--     load lua file as API
+--     install global symbols under API name
+--   additions
+--     enable dependencies between APIs via requireApi("APIname")
+--     allow apis to reject being loaded (e.g. turtle/computer) by returning false
+--     returns api for assignment to local variable
+
+apiPath = "rom/apis/advanced"
+local apiTable
+local apiLoading = {}
+local apiLoaded = {}
+local apiInstalled = {}
+local apiCurrent
+local apiIncludeOriginal = {}
+
+local function installApi(name, env)
+  local api = {}
+  for k,v in pairs(env) do
+    api[k] =  v
+  end
+  if apiIncludeOriginal[name] then
+    for k,v in pairs(_G[name]) do
+	  if api[k] then error("conflict with existing API entry "..k) end
+      api[k] =  v
+    end
+  end
+  rawset(_G, name, api)
+  apiInstalled[name] = api
+  --print("installing API "..name)
+end
+
+local function loadApiFromFile(name, path)
+  local env = setmetatable({}, {__index = _G})
+  local func, parseError = loadfile(path)
+  if not func then error(parseError) end
+  setfenv(func, env)
+  local result = func()
+  if result==nil then return env
+  elseif result==false then return nil end
+  error("Unexpected return value from API "..name)
+end
+
+local function loadApi(name, path)
+  if apiLoaded[name] then return end
+  if apiLoading[name] then
+    error("API "..name.." is required by "..apiCurrent.." which is being loaded indirectly by "..name" forming an unresolvable cycle.")
+  end
+
+  local apiContext = apiCurrent
+  apiLoading[name] = true
+  apiCurrent = name
+
+  --local success, result = pcall(loadApiFromFile, name, path)
+  local success, result = true, loadApiFromFile(name, path)
+  if not success then print("Error loading API "..name..": "..result)
+  elseif result then installApi(name, result) end
+
+  apiLoaded[name] = true
+  apiLoading[name] = nil
+  apiCurrent = apiContext
+end
+
+function includeOriginalApi()
+  apiIncludeOriginal[apiCurrent] = true
+end
+
+function requireApi(name)
+  local path = apiTable[name]
+  if not path then
+    error("API "..name.." required by "..apiCurrent.." does not exist")
+  end
+  loadApi(name, path)
+  local api = apiInstalled[name]
+  if not api then
+    error("Required API "..name.." did not load properly.")
+  end
+  return api
+end
+
+local function scanApiDir(apis, directory)
+  local files = fs.list(directory)
+  for i, file in ipairs(files) do
+    if string.sub(file, 1, 1) ~= "." then
+      local path = fs.combine(apiPath, file)
+      if not fs.isDir(path) then
+        apis[file] = path
+      end
+    end
+  end
+end
+
+function initializeApis()
+  local apis = {}
+  scanApiDir(apis, apiPath)
+  apiTable = apis
+  for name, path in pairs(apis) do
+    loadApi(name, path)
+  end
+end

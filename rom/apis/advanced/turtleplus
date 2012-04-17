@@ -1,0 +1,68 @@
+-- Turtle Plus
+
+-- Purpose:
+--   Extend the turtle API with the following features:
+--   Tracking of position
+--   Cooperation with GPS (update GPS position, interrupt GPS service while moving)
+--   Events for noting position changes
+--   additional getSelectedSlot() returns last slot selected by API
+
+if not turtle then return false end
+
+local gpsplus = loader.requireApi("gpsplus")
+local table = loader.requireApi("table")
+local event = loader.requireApi("event")
+
+local moved = event.new()
+local turned = event.new()
+
+local function wrapMove(move)
+  return function()
+    gpsplus.startMoving(vector.new(1, 0, 0))
+    local ret = move()
+    gpsplus.stopMoving(ret)
+    if ret then moved:call() end
+    return ret
+  end
+end
+
+local function wrapTurn(turn)
+  return function()
+    local ret = turn()
+    if ret then turned:call() end
+    return ret
+  end
+end
+
+local selectedSlot
+
+local function wrapSelect(select)
+  return function(slot)
+    selectedSlot = slot
+    select(slot)
+  end
+end
+
+local function getSelectedSlot()
+  return selectedSlot
+end
+
+
+
+local api = table.clone(turtle)
+api.nativeTurtle = turtle
+
+local function wrap(wrapper, funcnames)
+  for i, name in ipairs(funcnames) do
+    api[name] = wrapper(api[name])
+  end
+end
+
+wrap(wrapMove, {"forward", "back", "up", "down"})
+wrap(wrapTurn, {"turnLeft", "turnRight"})
+wrap(wrapSelect, {"select"})
+api.moved = moved
+api.turned = turned
+api.getSelectedSlot = getSelectedSlot
+
+rawset(_G, "turtle", api)

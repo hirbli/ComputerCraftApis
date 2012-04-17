@@ -1,0 +1,15 @@
+loader.includeOriginalApi()
+
+function clone(table)
+  local copy = {}
+  for k, v in pairs(table) do
+    copy[k] = v
+  end
+  return copy
+end
+
+function dump(table)
+  for k, v in pairs(table) do
+    print(k, v)
+  end
+end

@@ -1,0 +1,43 @@
+-- todo:
+--  relative setup
+
+local function usage(message)
+  if message then print("Error: "..message) end
+  print("Usage: gpsplus <command> ...")
+  print("  where <command> is one of")
+  print("status - prints the current GPS status")
+  print("set <t> <id> <x> <y> <z> - initialize coordinates")
+  print("global <x> <y> <z> - initialize global coordinates (minecraft)")
+  print("region - set as regional coordinate system origin")
+  print("relative - interactive setup relative to existing node")
+end
+
+local function listFixes()
+  print(" #:  snd csyst pos")
+  for i, fix in ipairs(gpsplus.fixes) do
+    local pos = fix.position
+    print(string.format("%2d: %4d %s%4d (%d, %d, %d)", i, fix.sender, "g", 0, fix.pos.x, fix.pos.y, fix.pos.z))
+  end
+end
+
+
+local args = {...}
+local command = args[1]
+
+if command=="status" then
+  listFixes()
+elseif command=="set" then
+  if #args~=6 then return usage("set requires 5 parameters") end
+  local _, t, id, x, y, z = ...
+  gpsplus.setPosition(t, id, vector.new(x, y, z))
+elseif command=="global" then
+  if #args~=4 then return usage("set requires 3 parameters") end
+  local _, x, y, z = ...
+  gpsplus.setPosition("g", 0, vector.new(x, y, z))
+elseif command=="region" then
+  gpsplus.setPosition("r", os.getComupterID(), vector.new(0, 0, 0))
+elseif command=="relative" then
+  return usage("not yet implemented")
+else
+  return usage("unknown command "..tostring(command))
+end

@@ -1,0 +1,308 @@
+-- Minecraft Networking (MiNet)
+
+-- Purpose:
+--   based on rednet messaging provide the following services
+--   message encapsulation for strings and table messages
+--   distinction between different protocols
+--   message forwarding according to routing table
+--   neighbor detection
+--   routing protocol to automatically determine routing table
+
+-- API
+--   sendMessage(dst, proto, message)
+--   receiveEvent:add(function(header, payload) end)
+--   receiveProtocol["proto"]:add(function(header, payload) end)
+--   neighborDiscovered:add(function(node) end)
+--   neighborLost:add(function(node) end)
+
+-- Message format: MN0{<src>,<dst>,<cnt>,<ttl>,<proto>}payload
+-- The fields in <> have the following meaning:
+--   src = computer id of original sender
+--   dst = computer id of final receiver or 0 for broadcast / multicast
+--   cnt = message count, sender+count identifies message for duplicate detection
+--   ttl = time to live
+--   proto = protocol, e.g. "nop", "gps", "routing"
+
+-- todo
+--  routing announcements: periodic? on detection of new neighbor?
+--  periodic ping if no bcast packet sent? ping on move of turtle?
+--  handle unbalanced { and } in strings
+-- add ack/timeout
+-- rpc?
+
+local event = loader.requireApi("event")
+local dispatcher = loader.requireApi("dispatcher")
+local table = loader.requireApi("table")
+local serializer = loader.requireApi("serializer")
+local timer = loader.requireApi("timer")
+local routingtable = loader.requireApi("routingtable")
+
+-- Periodic ------------------------------------------------------
+
+local periodic = event.new()
+
+function runPeriodic()
+  periodic:call()
+end
+
+-- Neighbors -----------------------------------------------------
+
+neighbors = {}
+local neighbors = neighbors
+local neighborTimeout = 10
+local neighborDiscovered = event.new()
+local neighborLost = event.new()
+
+local function neighborAlive(node)
+  if not neighbors[node] then neighborDiscovered:call(node) end
+  neighbors[node] = neighborTimeout
+end
+
+local function neighborPeriodic()
+  local delete = {}
+  for n, c in pairs(neighbors) do
+    local count = c - 1
+    if count==0 then table.insert(delete, n) end
+    neighbors[n] = count
+  end
+  for _, n in ipairs(delete) do
+    neighborLost:call(n)
+  end
+end
+
+periodic:add(neighborPeriodic)
+
+__lunit = {}
+
+function __lunit.neighbors()
+  local discover = lunit.countFunction()
+  local lost = lunit.countFunction()
+  neighborDiscovered:add(discover.func)
+  neighborLost:add(lost.func)
+  neighborAlive(1)
+  lunit.areEqual(1, discover.count)
+  lunit.areEqual(0, lost.count)
+  for i = 1, 9 do neighborPeriodic() end
+  lunit.areEqual(1, discover.count)
+  lunit.areEqual(0, lost.count)
+  neighborPeriodic()
+  lunit.areEqual(1, discover.count)
+  lunit.areEqual(1, lost.count)
+end
+
+-- Message Format ---------------------------------------------------
+
+local prefix = "MN0"
+local prefixlen = string.len(prefix)
+
+local function parseMessage(message)
+  if not message then return false end
+  if string.sub(message, 1, prefixlen) ~= prefix then return false end
+  local start, stop = string.find(message, "%b{}", prefixlen)
+  local headerstr = string.sub(message, start, stop)
+  local h = serializer.unserialize(headerstr)
+  local header = {src=h[1], dst=h[2], cnt=h[3], ttl=h[4], proto=h[5]}
+  if h[6] then
+    return header, h[6]
+  else
+    return header, string.sub(message, stop+1)
+  end
+end
+
+local function formatMessage(header, payload)
+  local start = prefix.."{"..header.src..","..header.dst..","..header.cnt..","..header.ttl..",'"..header.proto.."'"
+  if type(payload)=="string" then
+    return start.."}"..payload
+  else
+    return start..","..serializer.serialize(payload).."}"
+  end
+end
+
+function __lunit.formattingString()
+  local h = {src=2, dst=4, cnt=5, ttl=9, proto="gps"}
+  local p = "blub"
+  local str = formatMessage(h, p)
+  local h2, p2 = parseMessage(str)
+  lunit.areEqual(h, h2)
+  lunit.areEqual(p, p2)
+end
+
+function __lunit.formattingTable()
+  local h = {src=2, dst=4, cnt=5, ttl=9, proto="gps"}
+  local p = {x={2,3,"h"}, y=5, z={"blub"}}
+  local str = formatMessage(h, p)
+  local h2, p2 = parseMessage(str)
+  lunit.areEqual(h, h2)
+  lunit.areEqual(p, p2)
+end
+
+
+-- Duplicate Detector  ----------------------------------------------
+
+local messages = {}
+local messageTimeout = 10
+
+local function isDuplicateMessage(src, cnt)
+  local k = src..","..cnt
+  if messages[k] then return true end
+  messages[k] = messageTimeout
+  return false
+end
+
+local function messagePeriodic()
+  local delete = {}
+  for m, c in pairs(messages) do
+    local count = c - 1
+    if count==0 then table.insert(delete, m) end
+    messages[m] = count
+  end
+  for _, m in ipairs(delete) do
+    messages[m] = nil
+  end
+end
+
+periodic:add(messagePeriodic)
+
+-- Receiving and Sending ------------------------------------------------
+
+local myID = os.getComputerID()
+
+routing = routingtable.new(myID)
+
+receiveEvent = event.new()
+receiveProtocol = event.newTable()
+
+local function receiveLocal(header, payload)
+  local dst = header.dst
+  --print("receive "..header.src.." "..header.proto.." "..dst.." "..myID)
+  if dst~=0 and dst~=myID then return end
+  receiveEvent:call(header, payload)
+  receiveProtocol[header.proto]:call(header, payload)
+end
+
+local function sendMessageRaw(receiver, message)
+  if not receiver then rednet.broadcast(message)
+  else rednet.send(receiver, message) end
+end
+
+local function sendMessageInt(header, payload)
+  local receiver
+  if header.dst~=0 then
+    receiver = routing:getRoute(header.dst)
+  end
+  local msg = formatMessage(header, payload)
+  --print("send "..(receiver or "b")..": "..msg)
+  sendMessageRaw(receiver, msg)
+end
+
+local function forwardMessage(header, payload)
+  if header.dst==myID then return end
+  if header.ttl<=1 then return end
+  local h = table.clone(header)
+  h.ttl = h.ttl - 1
+  sendMessageInt(h, payload)
+end
+
+-- to be called when a message arrives
+function receiveMessage(sender, message, distance)
+  --print("recv "..sender..": "..message)
+  if sender~= myID then neighborAlive(sender) end
+  local header, payload = parseMessage(message)
+  if not header then return end
+  --print("receive "..header.src.." "..header.proto)
+  if isDuplicateMessage(header.src, header.cnt) then return end
+  header.distance = distance
+  forwardMessage(header, payload)
+  receiveLocal(header, payload)
+end
+
+local function receiveMessageEvent(event, sender, message, distance)
+  receiveMessage(sender, message, distance)
+end
+
+local messageCount = 0
+bcast = "broadcast"
+mcast = "multicast"
+
+function sendMessage(dst, proto, message)
+  --print("send "..dst.." "..proto)
+  local ttl = 100
+  if dst == bcast then dst, ttl = 0, 1
+  elseif dst == mcast then dst = 0 end
+  local header = {src=myID, dst=dst, cnt=messageCount, ttl=ttl, proto=proto}
+  messageCount = messageCount + 1
+  receiveLocal(header, message)
+  if dst~=myID then sendMessageInt(header, message) end
+end
+
+-- Presence Announce ----------------------------------------------
+
+local presence = 1
+
+function periodicPresence()
+  presence = presence-1
+  if presence>0 then return end
+  presence = 8
+  sendMessage(bcast, "presence", "")
+end
+
+periodic:add(periodicPresence)
+
+-- Ping Protocol ---------------------------------------------------
+
+local function pingReceive(header, payload)
+  sendMessage(header.src, "pong", payload)
+end
+
+receiveProtocol.ping:add(pingReceive)
+
+-- Routing Protocol ------------------------------------------------
+
+protoRouting = "route"
+
+local function routingSendTable()
+  local map = {}
+  for dest, _ in pairs(routing.gateways) do
+    map[dest] = routing.hops[dest]
+  end
+  sendMessage(bcast, protoRouting, map)
+end
+
+local function routingNeighbor(node)
+  routing:addRouting(node, {[node]=0})
+  routingSendTable()
+end
+
+local function removeRouting(node)
+  --print("remove routing")
+  routing:removeRouting(node)
+end
+
+local function routingReceive(header, payload)
+  if header.src==myID then return end
+  --print("add routing")
+  routing:addRouting(header.src, payload)
+end
+
+neighborDiscovered:add(routingNeighbor)
+neighborLost:add(removeRouting)
+receiveProtocol[protoRouting]:add(routingReceive)
+
+-- Port Management -------------------------------------------------
+
+local modems = { left = false, right = false, top = false, bottom = false, front = false, back = false }
+
+function openModems()
+  for side, open in pairs(modems) do
+    if not open and peripheral.getType(side) == "modem" then
+      rednet.open(side)
+      modems[side] = true
+    end
+  end
+end
+
+-- Initialization --------------------------------------------------
+
+dispatcher.filteredEvents.rednet_message:add(receiveMessageEvent)
+local periodicTimer = timer.new(runPeriodic)
+periodicTimer:startPeriodic(1)

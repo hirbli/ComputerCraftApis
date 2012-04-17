@@ -1,0 +1,40 @@
+-- OS event dispatcher
+
+-- Purpose:
+--   Provide a central entity that pulls os events and distributes them
+--   to interested parties
+--   uses one coroutine per event type, which is started the first time
+--   that type is registered
+
+-- Todo:
+--   needs to be incorporated like rednet via parallel.waitForAny, currently needs bios.lua patch
+--   clean shutdown (terminate event sufficient?)
+
+local event = loader.requireApi("event")
+local autotable = loader.requireApi("autotable")
+
+
+allEvents = event.new()
+local eventThread = {}
+
+if false then
+  local function start(eventType)
+    local thread = coroutine.create(run)
+    eventThread[eventType] = thread
+    coroutine.resume(thread, eventType)
+    return event.new()
+  end
+
+  filteredEvents = autotable.new(start)
+else
+  filteredEvents = event.newTable()
+end
+
+function run(filter)
+  while true do
+    local e, p1, p2, p3, p4, p5 = os.pullEventRaw(filter)
+    allEvents:pcall(e, p1, p2, p3, p4, p5)
+    filteredEvents[e]:pcall(e, p1, p2, p3, p4, p5)
+    if e=="terminate" then break end
+  end
+end

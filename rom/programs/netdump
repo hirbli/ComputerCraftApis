@@ -1,0 +1,28 @@
+local function usage(message)
+  if message then print("Error: "..message) end
+  print("Usage: netdump [raw]")
+end
+
+local function receive(header, payload)
+  print(serializer.serialize(header))
+end
+
+local function receiveRaw(event, src, msg, dist)
+  print("recv "..src.."("..tostring(dist).."): "..msg)
+end
+
+local args = {...}
+if #args>1 then return usage() end
+local cmd = args[1]
+
+if cmd=="raw" then
+  dispatcher.filteredEvents.rednet_message:add(receiveRaw)
+  read()
+  dispatcher.filteredEvents.rednet_message:remove(receiveRaw)
+elseif cmd==nil then
+  minet.receiveEvent:add(receive)
+  read()
+  minet.receiveEvent:remove(receive)
+else
+  return usage("unknown command "..cmd)
+end
