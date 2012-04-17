@@ -1,0 +1,38 @@
+This repository contains several extension APIs for ComputerCraft.
+The main focus is to provide networking, and advanced turtle navigation.
+The files can be added to an existing ComputerCraft installation.
+The only file overwritten will be bios.lua.  This is to add two lines
+that initialize the advanced API loader and the dispatcher.  You may
+need to adapt to newer versions of the bios.
+
+Overview:
+Directory /
+  bios.lua      - additions to initialize API loader and dispatcher
+  start.lua     - auxiliary loader to run unit tests in regular lua outside Minecraft
+
+Directory /rom/apis
+  loader        - advanced API loader that supports dependencies between APIs
+  lunit         - minimal unit testing framework
+
+Directory /rom/apis/advanced
+  autotable     - table that automatically initializes entries on first access
+  dispatcher    - distributes osEvents to parties that have registered
+  event         - redirect a call to all registered handlers
+  gpsplus       - gps with forwarding running in background
+  minet         - minecraft network stack (protocols, routing, broadcast, multicast)
+  persistency   - store a table persistently in a file
+  routingtable  - routing logic for network stack
+  serializer    - improved serializer (correct string handling, arrays)
+  table         - table utilities (clone)
+  timer         - abstraction of timer/alarm for multiple users
+  turtleplus    - extension to turtle API to interact with GPS / turtlesensor
+  turtlesensor  - sense envirenment as turtle moves
+
+Directory /rom/programs
+  gpsplus       - service program for getting status / configuring gpsplus API
+  netdump       - listen to network traffic
+  netstat       - show routing table
+  ping          - test network connectivity
+
+Directory /rom/autorun
+  init          - set up network
