@@ -25,7 +25,7 @@ function vtable:store()
 end
 
 function new(name, initialValue)
-  local path = "/persistency/"
+  local path = "persistency/"
   if not fs.exists(path) then fs.makeDir(path) end
   local p = {value=initialValue, name=name, path=path..name}
   setmetatable(p, vtable)

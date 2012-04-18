@@ -21,9 +21,13 @@ function countFunction()
 end
 
 local function runTest(name, func)
-  func()
-  local success, error = pcall(func)
-  print(success, name, error)
+  if true then
+    print(name)
+    func()
+  else
+    local success, error = pcall(func)
+    print(success, name, error)
+  end
 end
 
 local function runTests(table, path)

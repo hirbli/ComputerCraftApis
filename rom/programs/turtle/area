@@ -1,7 +1,7 @@
 
 local tArgs = { ... }
 if #tArgs ~= 3 then
-	print( "Usage: hirbli <forward> <right> <down>" )
+	print( "Usage: area <forward> <right> <down>" )
 	return
 end
 
