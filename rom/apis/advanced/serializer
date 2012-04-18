@@ -2,11 +2,11 @@
 
 -- Purpose:
 --   convert between object graph and string (lua chunk) representation
--- Improvements:
+-- Improvements over textutils.serialize():
 --   Correct string serialization
---   Compact array representation
+--   Compact array / key representation
 
--- Todo:
+-- Ideas:
 --   allow multiple references pointing to same table
 --   allow cycles
 

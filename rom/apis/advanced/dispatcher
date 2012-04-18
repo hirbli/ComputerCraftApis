@@ -12,7 +12,7 @@
 -- the parallel.waitForAny or noninvasively by calling the dispatcher from
 -- a program on the main thread.
 
--- TODO: test pullEvent()
+-- Todo: test pullEvent()
 
 local event = loader.requireApi("event")
 

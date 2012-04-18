@@ -16,7 +16,7 @@
 --      id = computerID to make regional and local coordinate systems unique, nil otherwise
 --   pos = coordinates (x, y, z)
 
--- todo:
+-- Todo:
 --   timeout of fixes
 --   coordinate system abstraction with conversion from one to other
 --   regional coordinates

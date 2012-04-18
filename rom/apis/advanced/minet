@@ -23,12 +23,11 @@
 --   ttl = time to live
 --   proto = protocol, e.g. "nop", "gps", "routing"
 
--- todo
---  routing announcements: periodic? on detection of new neighbor?
---  periodic ping if no bcast packet sent? ping on move of turtle?
---  handle unbalanced { and } in strings
--- add ack/timeout
--- rpc?
+-- Todo:
+--  handle unbalanced { and } in strings during serialization
+-- Ideas:
+--  add ack/timeout
+--  rpc?
 
 local event = loader.requireApi("event")
 local dispatcher = loader.requireApi("dispatcher")
