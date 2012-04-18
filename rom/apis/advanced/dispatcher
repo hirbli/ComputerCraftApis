@@ -6,29 +6,20 @@
 --   uses one coroutine per event type, which is started the first time
 --   that type is registered
 
--- Todo:
---   needs to be incorporated like rednet via parallel.waitForAny, currently needs bios.lua patch
---   clean shutdown (terminate event sufficient?)
+-- NOTE:
+-- The dispatcher needs to be run on a thread that receives os events.
+-- This can be done by patching bias.lua to call the run() function inside
+-- the parallel.waitForAny or noninvasively by calling the dispatcher from
+-- a program on the main thread.
+
+-- TODO: test pullEvent()
 
 local event = loader.requireApi("event")
-local autotable = loader.requireApi("autotable")
-
 
 allEvents = event.new()
 local eventThread = {}
 
-if false then
-  local function start(eventType)
-    local thread = coroutine.create(run)
-    eventThread[eventType] = thread
-    coroutine.resume(thread, eventType)
-    return event.new()
-  end
-
-  filteredEvents = autotable.new(start)
-else
-  filteredEvents = event.newTable()
-end
+filteredEvents = event.newTable()
 
 function run(filter)
   while true do
@@ -38,3 +29,23 @@ function run(filter)
     if e=="terminate" then break end
   end
 end
+
+local waitingForEvent = {}
+
+function pullEvent(filter)
+  local thread = coroutine.running()
+  waitingForEvent[thread] = filter or true
+  local e, p1, p2, p3, p4, p5 = coroutine.yield()
+  waitingForEvent[thread] = nil
+  return e, p1, p2, p3, p4, p5
+end
+
+local function runWaitingThreads(e, p1, p2, p3, p4, p5)
+  local wfe = table.clone(waitingForEvent)
+  for k, v in pairs(wfe) do
+    if v==true or v==e then
+      coroutine.resume(k)
+    end
+  end
+end
+
