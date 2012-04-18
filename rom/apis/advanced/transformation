@@ -1,0 +1,93 @@
+-- Vector Transformations ----------------------------------------
+
+-- Purpose:
+--   Perform linear transformations on vectors
+--   Combine merge multiple transformations
+
+-- The transformations are restricted to turtle geometry and consist of:
+-- - a vector offset
+-- - a number 0, 1, 2, 3 indicating the number of 90 degree left turns
+
+local function vectorturn(v, turn)
+  if turn==0 then return v end
+  local x, z
+  if turn==1 then x, z = -v.z, v.x
+  elseif turn==2 then x, z = -v.x, -v.z
+  elseif turn==3 then x, z = v.z, -v.x
+  else error("turn must be 0, 1, 2 or 3") end
+  return vector.new(x, v.y, z)
+end
+
+local origin = vector.new(0, 0, 0)
+
+
+local tx = {}
+tx.__index = tx
+
+local function new(offset, turn)
+  return setmetatable({offset=offset, turn=turn}, tx)
+end
+
+function tx:inverse()
+  local turn = (4-self.turn)%4
+  local offset = origin - vectorturn(self.offset, self.turn)
+  return new(offset, turn)
+end
+
+function tx:concat(t2)
+  local turn = (self.turn + t2.turn)%4
+  local offset = self.offset + vectorturn(t2.offset, (4-self.turn)%4)
+  return new(offset, turn)
+end
+
+function tx:apply(v)
+  return vectorturn(v + self.offset, self.turn)
+end
+
+identity = new(origin, 0)
+
+function turn(turn)
+  if turn<0 or turn>=4 then error("turn out of range") end
+  return new(origin, turn)
+end
+
+function move(offset)
+  return new(offset, 0)
+end
+
+__lunit = {}
+
+function __lunit.vectorturn()
+  local v = vector.new(1, 2, 3)
+  local vt = v
+  for i=0,3 do
+    lunit.areEqual(vt, vectorturn(v, i))
+    lunit.areEqual(vt, turn(i):apply(v))
+    vt = vectorturn(vt, 1)
+  end
+end
+
+local function createTestVectors()
+  local vectors = {}
+  for x=-1,1 do
+    for y=-1,1 do
+      for z=-1,1 do
+        table.insert(vectors, vector.new(x, y, z))
+      end
+    end
+  end
+  return vectors
+end
+
+function __lunit.inverse()
+  local vectors = createTestVectors()
+  for t=0,3 do
+    local tx = new(vector.new(1, 2, 3), t)
+    local ti = tx:inverse()
+    lunit.areEqual(identity, tx:concat(ti))
+    lunit.areEqual(identity, ti:concat(tx))
+    for i, v in ipairs(vectors) do
+      lunit.areEqual(v, ti:apply(tx:apply(v)))
+    end
+  end
+end
