@@ -5,7 +5,8 @@ The only file overwritten will be bios.lua.  This is to add two lines
 that initialize the advanced API loader and the dispatcher.  You may
 need to adapt to newer versions of the bios.
 
-Overview:
+Overview of files:
+
 Directory /
   bios.lua      - additions to initialize API loader and dispatcher
   start.lua     - auxiliary loader to run unit tests in regular lua outside Minecraft
@@ -27,6 +28,7 @@ Directory /rom/apis/advanced
   timer         - abstraction of timer/alarm for multiple users
   turtleplus    - extension to turtle API to interact with GPS / turtlesensor
   turtlesensor  - sense envirenment as turtle moves
+  transformation- linear transformations on vectors
 
 Directory /rom/programs
   gpsplus       - service program for getting status / configuring gpsplus API
