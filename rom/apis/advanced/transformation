@@ -8,6 +8,19 @@
 -- - a vector offset
 -- - a number 0, 1, 2, 3 indicating the number of 90 degree left turns
 
+-- Operations
+--   assume t, t1, t2 are transformations, v is a vector
+--   v2 = t:apply(v1)     v2 is the transformed v1
+--   t3 = t1:concat(t2)   t3 has the combined effect of t2 followed by t1
+--                        t3:apply(v) = t1:apply(t2:apply(v))
+--   identity             a transformation that does nothing
+--                        v = identity:apply(v)
+--                        t = identity:concat(t) = t:concat(identity)
+--   t2 = t1:inverse()    t2 is the inverse of t1
+--                        indentity = t2:concat(t1) = t1:concat(t2)
+
+--   t1..t2..v = t1*t2..v
+
 local function vectorturn(v, turn)
   if turn==0 then return v end
   local x, z
@@ -36,7 +49,7 @@ end
 
 function tx:concat(t2)
   local turn = (self.turn + t2.turn)%4
-  local offset = self.offset + vectorturn(t2.offset, (4-self.turn)%4)
+  local offset = t2.offset + vectorturn(self.offset, (4-t2.turn)%4)
   return new(offset, turn)
 end
 
@@ -89,5 +102,16 @@ function __lunit.inverse()
     for i, v in ipairs(vectors) do
       lunit.areEqual(v, ti:apply(tx:apply(v)))
     end
+  end
+end
+
+function __lunit.applyconcat()
+  local t1 = new(vector.new(1, 2, 3), 1)
+  local t2 = new(vector.new(4, 5, 6), 2)
+  local vectors = createTestVectors()
+  for i, v in ipairs(vectors) do
+    local apply = t1:apply(t2:apply(v))
+    local concat = t1:concat(t2):apply(v)
+    lunit.areEqual(apply, concat)
   end
 end
