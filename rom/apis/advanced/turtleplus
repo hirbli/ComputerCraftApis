@@ -3,13 +3,13 @@
 -- Purpose:
 --   Extend the turtle API with the following features:
 --   Tracking of position
---   Cooperation with GPS (update GPS position, interrupt GPS service while moving)
+--   Cooperation with position API (update position, interrupt galileo service while moving)
 --   Events for noting position changes
 --   additional getSelectedSlot() returns last slot selected by API
 
 if not turtle then return false end
 
-local gpsplus = loader.requireApi("gpsplus")
+local position = loader.requireApi("position")
 local table = loader.requireApi("table")
 local event = loader.requireApi("event")
 
@@ -18,9 +18,9 @@ local turned = event.new()
 
 local function wrapMove(move)
   return function()
-    gpsplus.startMoving(vector.new(1, 0, 0))
+    position.startMoving(vector.new(1, 0, 0))
     local ret = move()
-    gpsplus.stopMoving(ret)
+    position.stopMoving(ret)
     if ret then moved:call() end
     return ret
   end

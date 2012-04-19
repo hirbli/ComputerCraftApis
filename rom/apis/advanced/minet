@@ -21,7 +21,7 @@
 --   dst = computer id of final receiver or 0 for broadcast / multicast
 --   cnt = message count, sender+count identifies message for duplicate detection
 --   ttl = time to live
---   proto = protocol, e.g. "nop", "gps", "routing"
+--   proto = protocol, e.g. "nop", "galileo", "routing"
 
 -- Todo:
 --  handle unbalanced { and } in strings during serialization
@@ -118,7 +118,7 @@ local function formatMessage(header, payload)
 end
 
 function __lunit.formattingString()
-  local h = {src=2, dst=4, cnt=5, ttl=9, proto="gps"}
+  local h = {src=2, dst=4, cnt=5, ttl=9, proto="test"}
   local p = "blub"
   local str = formatMessage(h, p)
   local h2, p2 = parseMessage(str)
@@ -127,7 +127,7 @@ function __lunit.formattingString()
 end
 
 function __lunit.formattingTable()
-  local h = {src=2, dst=4, cnt=5, ttl=9, proto="gps"}
+  local h = {src=2, dst=4, cnt=5, ttl=9, proto="test"}
   local p = {x={2,3,"h"}, y=5, z={"blub"}}
   local str = formatMessage(h, p)
   local h2, p2 = parseMessage(str)

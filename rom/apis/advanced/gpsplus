@@ -1,31 +1,33 @@
--- GPS Plus
+-- Galileo - the European GPS
 
 -- Purpose:
---   Provide GPS services based on minet with the following features:
+--   Provide "satellite" navigation services based on minet with the following features:
 --   Different coordinate systems
 --     global = equal to minecraft coordinates
 --     regional = valid for a region, specifically set up by user
 --     local = local to computer starting at 0, 0, 0 (useful for turtles)
 --   Announcing position to neighbors
 --   Upgrade of coordinate data to best available coordinate system
---   Simplified setup of global and regional cordinate systems using gpsplus service program
+--   Simplified setup of global and regional cordinate systems using galileo service program
 
--- GPS messages: {cs={<cst>, <id>}, pos={<x>,<y>,<z>}}
+-- Galileo messages: {cs={<cst>, <id>}, pos={<x>,<y>,<z>}}
 --   cs = coordinate system
 --      cst = coordinate system type: "g"=global/"r"=regional/"l"=local
 --      id = computerID to make regional and local coordinate systems unique, nil otherwise
 --   pos = coordinates (x, y, z)
 
 -- Todo:
+--   adapt to work with position API
+--   test
 --   timeout of fixes
---   coordinate system abstraction with conversion from one to other
 --   regional coordinates
 --   abstraction of direction
---   interface for position changes (turtle)
+
+do return false end -- not tested yet
 
 local minet = loader.requireApi("minet")
 local persist = loader.requireApi("persistency")
-
+local position = loader.requireApi("position")
 
 fixes = {}
 
@@ -108,18 +110,11 @@ function calculatePosition()
 end
 
 
--- Position Logic ---------------------------------------------------------
-
-local myID = os.getComputerID()
-local initialLocation = {cs={t="l", id=myID}, pos=vector.new(0, 0, 0)}
-local location = persist.new("gpsplus", initialLocation)
-location:store()
-
 -- Protocol implementation ------------------------------------------------
 
-local proto = "GPS"
+local proto = "galileo"
 
-local function sendGPS()
+local function sendPosition()
   local cs = position.value.cs
   if cs.t=="l" then return end
   local pos = position.value.pos
@@ -130,10 +125,10 @@ function setPosition(cstype, csid, pos)
   location.value.cs = {cstype, csid}
   location.value.pos = pos
   location:store()
-  sendGPS()
+  sendPosition()
 end
 
-local function receiveGPS(header, payload)
+local function receivePosition(header, payload)
   if payload.cs[1]~="g" then return end  -- for now only global coordinate system
   local pos = payload.pos
   local fix = {id=header.src, position=vector.new(pos[1], pos[2], pos[3]), distance = header.distance}
@@ -144,20 +139,6 @@ local function receiveGPS(header, payload)
 end
 
 
--- Movement -----------------------------------------------------------
-
-function startMoving(moveVector)
-  location.value.moving = moveVector
-  location:store()
-end
-
-function stopMoving(success)
-  local moveVector = location.value.moving
-  location.value.moving = nil
-  if success then location.value.pos = location.value.pos + moveVector end
-  location:store()
-end
-
 -- Initialization --------------------------------------------------------
 
-minet.receiveProtocol[proto]:add(receiveGPS)
+minet.receiveProtocol[proto]:add(receivePosition)

@@ -1,0 +1,40 @@
+-- Position of Computer Relative to Coordinate System
+
+-- Purpose:
+--   Different coordinate systems
+--     global = equal to minecraft coordinates
+--     regional = valid for a region, specifically set up by user
+--     local = local to computer starting at 0, 0, 0 (useful for turtles)
+--   Upgrade of coordinate data to best available coordinate system
+
+-- Todo:
+--   switch to using transformations for position
+--   coordinate system abstraction with conversion from one to other
+--   regional coordinates
+--   abstraction of direction
+--   interface for position changes (turtle)
+
+local persist = loader.requireApi("persistency")
+local tx = loader.requireApi("transformation")
+
+-- Position Logic ---------------------------------------------------------
+
+local myID = os.getComputerID()
+local initialLocation = {cs={t="l", id=myID}, pos=vector.new(0, 0, 0)}
+local location = persist.new("position", initialLocation)
+location:store()
+
+
+-- Movement -----------------------------------------------------------
+
+function startMoving(moveVector)
+  location.value.moving = moveVector
+  location:store()
+end
+
+function stopMoving(success)
+  local moveVector = location.value.moving
+  location.value.moving = nil
+  if success then location.value.pos = location.value.pos + moveVector end
+  location:store()
+end
