@@ -1,0 +1,36 @@
+local table = loader.requireApi("table")
+
+local array={}
+array.__index = array
+
+local function makeKey(index)
+  return table.concat(index, "\0")
+end
+
+function array:set(index, value)
+  self[makeKey(index)] = value
+end
+
+function array:get(index)
+  return self[makeKey(index)]
+end
+
+function new()
+  return setmetatable({}, array)
+end
+
+__lunit = {}
+
+function __lunit.twodim()
+  local a = new()
+  for i=-1,2 do
+    for j=-2,1 do
+      a:set({i, j}, i*10+j)
+    end
+  end
+  for i=-1,2 do
+    for j=-2,1 do
+      lunit.areEqual(i*10+j, a:get({i, j}))
+    end
+  end
+end

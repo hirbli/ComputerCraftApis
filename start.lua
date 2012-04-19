@@ -1,7 +1,7 @@
 fs={}
 
 function fs.list(dir)
-  return {"autotable", "dispatcher", "event", "gpsplus", "minet", "persistency", "serializer", "table", "timer", "turtleplus", "routingtable", "turtlesensor", "transformation"}
+  return {"autotable", "dispatcher", "event", "gpsplus", "minet", "persistency", "serializer", "table", "timer", "turtleplus", "routingtable", "turtlesensor", "transformation", "array"}
 end
 function fs.combine(a, b)
   return a.."/"..b
