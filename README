@@ -19,19 +19,20 @@ Directory /rom/apis/advanced
   autotable     - table that automatically initializes entries on first access
   dispatcher    - distributes osEvents to parties that have registered
   event         - redirect a call to all registered handlers
-  gpsplus       - gps with forwarding running in background
+  galileo       - European GPS (running in background with forwarding)
   minet         - minecraft network stack (protocols, routing, broadcast, multicast)
   persistency   - store a table persistently in a file
   routingtable  - routing logic for network stack
   serializer    - improved serializer (correct string handling, arrays)
   table         - table utilities (clone)
   timer         - abstraction of timer/alarm for multiple users
-  turtleplus    - extension to turtle API to interact with GPS / turtlesensor
+  turtleplus    - adds hooks to turtle API and updates position API
   turtlesensor  - sense envirenment as turtle moves
   transformation- linear transformations on vectors
+  position      - API to maintain position of computer / turtle
 
 Directory /rom/programs
-  gpsplus       - service program for getting status / configuring gpsplus API
+  galileo       - service program for getting status / configuring galileo API
   netdump       - listen to network traffic
   netstat       - show routing table
   ping          - test network connectivity
