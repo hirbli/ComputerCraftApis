@@ -1,7 +1,11 @@
 fs={}
 
 function fs.list(dir)
-  return {"autotable", "dispatcher", "event", "gpsplus", "minet", "persistency", "serializer", "table", "timer", "turtleplus", "routingtable", "turtlesensor", "transformation", "array"}
+  local files={}
+  for file in io.popen("ls '"..dir.."'"):lines() do
+    table.insert(files, file)
+  end
+  return files
 end
 function fs.combine(a, b)
   return a.."/"..b
