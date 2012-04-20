@@ -10,6 +10,16 @@ loader.requireApi("turtleplus")
 local turtle = turtle
 local rednet = rednet
 local peripheral = peripheral
+local tx = loader.requireApi("transformation")
+
+local dirVectors = {
+  front = vector.new(1, 0, 0),
+  back = vector.new(-1, 0, 0),
+  top = vector.new(0, 1, 0),
+  bottom = vector.new(0, -1, 0),
+  left = vector.new(0, 0, 1),
+  right = vector.new(0, 0, -1)
+}
 
 local function sensePeripherals(direction)
   local device = peripheral.getType(direction)

@@ -12,13 +12,22 @@ if not turtle then return false end
 local position = loader.requireApi("position")
 local table = loader.requireApi("table")
 local event = loader.requireApi("event")
+local tx = loader.requireApi("transformation")
 
 local moved = event.new()
 local turned = event.new()
 
-local function wrapMove(move)
+local dirVectors = {
+  forward = vector.new(1, 0, 0),
+  back = vector.new(-1, 0, 0),
+  up = vector.new(0, 1, 0),
+  down = vector.new(0, -1, 0)
+}
+
+local function wrapMove(move, name)
+  local t = tx.move(dirVectors[name])
   return function()
-    position.startMoving(vector.new(1, 0, 0))
+    position.startMoving(v)
     local ret = move()
     position.stopMoving(ret)
     if ret then moved:call() end
@@ -26,9 +35,14 @@ local function wrapMove(move)
   end
 end
 
-local function wrapTurn(turn)
+local turnDirections = {turnLeft=1, turnRight=3}
+
+local function wrapTurn(turn, name)
+  local t = tx.turn(turnDirections[name])
   return function()
+    position.startMoving(t)
     local ret = turn()
+    position.stopMoving(ret)
     if ret then turned:call() end
     return ret
   end
@@ -54,7 +68,7 @@ api.nativeTurtle = turtle
 
 local function wrap(wrapper, funcnames)
   for i, name in ipairs(funcnames) do
-    api[name] = wrapper(api[name])
+    api[name] = wrapper(api[name], name)
   end
 end
 

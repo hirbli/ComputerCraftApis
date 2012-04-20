@@ -5,8 +5,8 @@
 --   Combine merge multiple transformations
 
 -- The transformations are restricted to turtle geometry and consist of:
--- - a vector offset
--- - a number 0, 1, 2, 3 indicating the number of 90 degree left turns
+--   offset: a vector offset
+--   turn: a number 0, 1, 2, 3 indicating the number of 90 degree left turns
 
 -- Operations
 --   assume t, t1, t2 are transformations, v is a vector
@@ -37,13 +37,19 @@ local origin = vector.new(0, 0, 0)
 local tx = {}
 tx.__index = tx
 
-local function new(offset, turn)
+function newFromTable(table)
+  local v = table.offset
+  table.offset = vector.new(v.x, v.y, v.z)
+  return setmetatable(table, tx)
+end
+
+function new(offset, turn)
   return setmetatable({offset=offset, turn=turn}, tx)
 end
 
 function tx:inverse()
   local turn = (4-self.turn)%4
-  local offset = origin - vectorturn(self.offset, self.turn)
+  local offset = -vectorturn(self.offset, self.turn)
   return new(offset, turn)
 end
 

@@ -8,7 +8,6 @@
 --   Upgrade of coordinate data to best available coordinate system
 
 -- Todo:
---   switch to using transformations for position
 --   coordinate system abstraction with conversion from one to other
 --   regional coordinates
 --   abstraction of direction
@@ -19,22 +18,31 @@ local tx = loader.requireApi("transformation")
 
 -- Position Logic ---------------------------------------------------------
 
-local myID = os.getComputerID()
-local initialLocation = {cs={t="l", id=myID}, pos=vector.new(0, 0, 0)}
+--local myID = os.getComputerID()
+local initialLocation = {pos=tx.identity, moving=false}
 local location = persist.new("position", initialLocation)
+location.value.pos = tx.newFromTable(location.value.pos)
+if location.value.moving then
+  print("Position was changing during shutdown, resetting.")
+  location.value = initialLocation
+  -- reset other ???
+end
 location:store()
-
 
 -- Movement -----------------------------------------------------------
 
-function startMoving(moveVector)
-  location.value.moving = moveVector
+local moveTx
+
+function startMoving(transformation)
+  location.value.moving = true
   location:store()
+  moveTx = transformation
 end
 
 function stopMoving(success)
-  local moveVector = location.value.moving
-  location.value.moving = nil
-  if success then location.value.pos = location.value.pos + moveVector end
+  location.value.moving = false
+  if success then
+    location.value.pos = location.value.pos.concat(moveTx)
+  end
   location:store()
 end
