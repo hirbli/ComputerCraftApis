@@ -27,7 +27,7 @@ local dirVectors = {
 local function wrapMove(move, name)
   local t = tx.move(dirVectors[name])
   return function()
-    position.startMoving(v)
+    position.startMoving(t)
     local ret = move()
     position.stopMoving(ret)
     if ret then moved:call() end

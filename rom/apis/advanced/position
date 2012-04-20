@@ -31,7 +31,7 @@ location:store()
 
 -- Movement -----------------------------------------------------------
 
-local moveTx
+local moveTx = nil
 
 function startMoving(transformation)
   location.value.moving = true
@@ -42,7 +42,27 @@ end
 function stopMoving(success)
   location.value.moving = false
   if success then
-    location.value.pos = location.value.pos.concat(moveTx)
+    location.value.pos = location.value.pos:concat(moveTx)
+    moveTx = nil
   end
   location:store()
+end
+
+__lunit = {}
+
+local function check(x, y, z, t)
+  local pos=location.value.pos
+  --pos.offset
+end
+
+function __lunit.path()
+  local fw = tx.move(vector.new(1, 0, 0))
+  startMoving(fw)
+  stopMoving(false)
+  startMoving(fw)
+  stopMoving(true)
+  startMoving(tx.turn(1))
+  stopMoving(true)
+  startMoving(fw)
+  stopMoving(true)
 end
