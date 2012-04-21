@@ -1,16 +1,23 @@
+function areSame(expected, actual)
+  if expected == actual then return end
+  error("Values not equal: expected="..tostring(expected)..", actual="..tostring(actual))
+end
+
 function areEqual(expected, actual)
   if type(expected)==type(actual) and type(expected)=="table" then
     for k, v in pairs(expected) do
       local a = actual[k]
       if a == nil then error("missing table entry "..k) end
-      areEqual(v, a)
+      local success, msg = pcall(areEqual, v, a)
+      if not success then
+        error("In table entry "..k..":\n"..msg)
+      end
     end
     for k, v in pairs(actual) do
       if expected[k]==nil then error("extraneous table entry "..k) end
     end
   else
-    if expected == actual then return end
-    error("Values not equal: expected="..tostring(expected)..", actual="..tostring(actual))
+    areSame(expected, actual)
   end
 end
 
