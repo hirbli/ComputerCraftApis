@@ -1,3 +1,9 @@
+-- Volume - Table Indexed by Vectors
+
+-- Purpose:
+--   Associate coordinates expressed as vectors with values
+
+
 local table = loader.requireApi("table")
 local object = loader.requireApi("object")
 local iterator = loader.requireApi("iterator")

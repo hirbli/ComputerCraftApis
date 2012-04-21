@@ -2,6 +2,19 @@
 
 -- Purpose:
 --   provide a root class "object" that can be derived from
+--   Classes have the functions inherited from the object class:
+--     instance = class:new(...)
+--     subClass = class:createSubclass(name)
+--     name = class:getClassName()
+--     superClass = class:getSuper()
+--   Instances have the functions inherited from object
+--     object:getClass()
+
+--   To make your own class:
+--     local class, instance = object.createSubclass("myClass")
+--     function class:myClassMethod() end
+--     function instance:myInstanceMethod() end
+--     function instance:init(...) initialize class end
 
 local function createVTable(class)
   local vt = {}
@@ -21,18 +34,18 @@ local metaclassvt = createVTable(metaclass)
 function metaclassvt:getSuper()
   return self.super
 end
-
-local object = createInstanceFromClass(metaclass)
-object.className = "object"
-local objectvt = createVTable(object)
-function object:getClassName()
+function metaclassvt:getClassName()
   return self.className
 end
-function object:new(...)
+function metaclassvt:new(...)
   o = createInstanceFromClass(self)
   if o.init then o:init(...) end
   return o
 end
+
+local object = createInstanceFromClass(metaclass)
+object.className = "object"
+local objectvt = createVTable(object)
 function object:createSubclass(name)
   local subclass = createInstanceFromClass(metaclass)
   local subclassvt = createVTable(subclass)

@@ -1,3 +1,9 @@
+-- Array - Multi-Dimensional Array Indexed by Key Sequences
+
+-- Purpose:
+--   Provide multi-dimensional arrays.
+--   The key must be a sequence.
+
 local table = loader.requireApi("table")
 local object = loader.requireApi("object")
 

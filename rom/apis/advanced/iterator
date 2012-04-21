@@ -1,4 +1,8 @@
+-- Iterator helpers
 
+-- Purpose:
+--   Apply functions and filters to iterators.
+--   Inspired by .NET System.Linq
 
 function select(func, iterator, state, init)
   local position = init
