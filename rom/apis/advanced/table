@@ -13,3 +13,11 @@ function dump(table)
     print(k, v)
   end
 end
+
+function copyNoOverwrite(src, dst)
+  for k, v in pairs(src) do
+    if nil==dst[k] then
+      dst[k] = v
+    end
+  end
+end
