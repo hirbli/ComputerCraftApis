@@ -9,22 +9,27 @@
 --     allow apis to reject being loaded (e.g. turtle/computer) by returning false
 --     returns api for assignment to local variable
 
-apiPath = "rom/apis/advanced"
+local apiPaths
 local apiTable
 local apiLoading = {}
 local apiLoaded = {}
 local apiInstalled = {}
 local apiCurrent
 local apiIncludeOriginal = {}
+local apiUseTable = {}
 
 local function installApi(name, env)
   local api = {}
-  for k,v in pairs(env) do
-    api[k] =  v
+  if apiUseTable[name] then
+    api = apiUseTable[name]
+  else
+    for k,v in pairs(env) do
+      api[k] =  v
+    end
   end
   if apiIncludeOriginal[name] then
     for k,v in pairs(_G[name]) do
-	  if api[k] then error("conflict with existing API entry "..k) end
+      if api[k] then error("conflict with existing API entry "..k) end
       api[k] =  v
     end
   end
@@ -68,6 +73,10 @@ function includeOriginalApi()
   apiIncludeOriginal[apiCurrent] = true
 end
 
+function installAsApi(api)
+  apiUseTable[apiCurrent] = api
+end
+
 function requireApi(name)
   local path = apiTable[name]
   if not path then
@@ -85,7 +94,7 @@ local function scanApiDir(apis, directory)
   local files = fs.list(directory)
   for i, file in ipairs(files) do
     if string.sub(file, 1, 1) ~= "." then
-      local path = fs.combine(apiPath, file)
+      local path = fs.combine(directory, file)
       if not fs.isDir(path) then
         apis[file] = path
       end
@@ -93,11 +102,22 @@ local function scanApiDir(apis, directory)
   end
 end
 
-function initializeApis()
+function setApiPaths(paths)
+  apiPaths = paths
   local apis = {}
-  scanApiDir(apis, apiPath)
+  for i, path in ipairs(paths) do
+    scanApiDir(apis, path)
+  end
   apiTable = apis
-  for name, path in pairs(apis) do
+end
+
+function loadAllApis()
+  for name, path in pairs(apiTable) do
     loadApi(name, path)
   end
+end
+
+function initializeApis()
+  setApiPaths{"rom/apis/advanced"}
+  loadAllApis()
 end
