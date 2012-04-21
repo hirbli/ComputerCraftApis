@@ -1,0 +1,69 @@
+-- Class Functionality
+
+-- Purpose:
+--   provide a root class "object" that can be derived from
+
+local function createVTable(class)
+  local vt = {}
+  vt.__index = vt
+  function vt.getClass() return class end
+  class._vtable = vt
+  return vt
+end
+
+local function createInstanceFromClass(class)
+  local inst = {}
+  return setmetatable(inst, class._vtable)
+end
+
+local metaclass = {}
+local metaclassvt = createVTable(metaclass)
+function metaclassvt:getSuper()
+  return self.super
+end
+
+local object = createInstanceFromClass(metaclass)
+object.className = "object"
+local objectvt = createVTable(object)
+function object:getClassName()
+  return self.className
+end
+function object:new(...)
+  o = createInstanceFromClass(self)
+  if o.init then o:init(...) end
+  return o
+end
+function object:createSubclass(name)
+  local subclass = createInstanceFromClass(metaclass)
+  local subclassvt = createVTable(subclass)
+  subclass.className = name
+  subclass.super = self
+  table.copyNoOverwrite(self, subclass)
+  table.copyNoOverwrite(self._vtable, subclassvt)
+  return subclass, subclassvt
+end
+
+__lunit = {}
+
+function __lunit.object()
+  lunit.areEqual("object", object:getClassName())
+  lunit.areEqual(nil, object:getSuper())
+  lunit.areSame(metaclass, object:getClass())
+end
+function __lunit.instance()
+  local o = object:new()
+  lunit.areSame(object, o:getClass())
+  local o2 = object:new()
+  lunit.areSame(true, o~=o2)
+end
+function __lunit.subclass()
+  local x, vt = object:createSubclass("x")
+  function vt:init(a) self.val = a end
+  lunit.areEqual("x", x:getClassName())
+  lunit.areSame(object, x:getSuper())
+  local o = x:new(4)
+  lunit.areSame(x, o:getClass())
+  lunit.areEqual(4, o.val)
+end
+
+loader.installAsApi(object)
