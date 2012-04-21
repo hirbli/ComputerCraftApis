@@ -57,6 +57,13 @@ local function runTable(table, discovered, path)
   end
 end
 
+function new(table)
+  table = table or _G
+  local test = {}
+  table.__lunit = test
+  return test
+end
+
 function run(start)
   if not start then
     runTable(_G, {}, "_G")

@@ -1,28 +1,28 @@
 local table = loader.requireApi("table")
+local object = loader.requireApi("object")
 
-local array={}
-array.__index = array
+local class, inst = object:createSubclass("array")
+loader.installAsApi(class)
+
 
 local function makeKey(index)
   return table.concat(index, "\0")
 end
 
-function array:set(index, value)
+
+function inst:set(index, value)
   self[makeKey(index)] = value
 end
 
-function array:get(index)
+function inst:get(index)
   return self[makeKey(index)]
 end
 
-function new()
-  return setmetatable({}, array)
-end
 
-__lunit = {}
+local test = lunit.new(class)
 
-function __lunit.twodim()
-  local a = new()
+function test.twodim()
+  local a = class:new()
   for i=-1,2 do
     for j=-2,1 do
       a:set({i, j}, i*10+j)
