@@ -1,17 +1,27 @@
 -- Position of Computer Relative to Coordinate System
 
 -- Purpose:
---   Different coordinate systems
---     global = equal to minecraft coordinates
---     regional = valid for a region, specifically set up by user
---     local = local to computer starting at 0, 0, 0 (useful for turtles)
---   Upgrade of coordinate data to best available coordinate system
+--   Tracks the current position and orientation of the computer (or turtle).
+--   The position and orientation is expressed in the form of a
+--   linear transformation between the computer relative coordinates and
+--   reference coordinates:
+--      reference = position:apply(relative)
+--   where position is the transformation and relative and reference
+--   are vectors.
+--   The relative coordinates are:
+--     (0, 0, 0) position of computer
+--     (1, 0, 0) one block in forward direction of computer
+--     (0, 1, 0) one block above computer
+--     (0, 0, 1) one block to the right of the computer
+--   The reference coordinate system is initialized to be the same
+--   as the relative coordinate system, but stays in place while
+--   the turtle moves.
+--   If a better reference coordinate system becomes available (e.g. via
+--   galileo), the reference can be exchanged.
 
 -- Todo:
 --   coordinate system abstraction with conversion from one to other
---   regional coordinates
 --   abstraction of direction
---   interface for position changes (turtle)
 
 local persist = loader.requireApi("persistency")
 local tx = loader.requireApi("transformation")
