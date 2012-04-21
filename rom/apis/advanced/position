@@ -56,13 +56,17 @@ local function check(x, y, z, t)
 end
 
 function __lunit.path()
+  location.value = initialLocation
   local fw = tx.move(vector.new(1, 0, 0))
   startMoving(fw)
   stopMoving(false)
   startMoving(fw)
   stopMoving(true)
+  lunit.areEqual(fw, location.value.pos)
   startMoving(tx.turn(1))
   stopMoving(true)
   startMoving(fw)
   stopMoving(true)
+  lunit.areEqual(vector.new(1, 0, -1), location.value.pos:apply(vector.new(0, 0, 0)))
+  lunit.areEqual(vector.new(1, 0, -2), location.value.pos:apply(vector.new(1, 0, 0)))
 end
