@@ -1,0 +1,39 @@
+
+
+function select(func, iterator, state, init)
+  local position = init
+  local extractPos = function(first, ...)
+    position = first
+    if first==nil then return end
+    return func(first, ...)
+  end
+  local function newIterator(state)
+    return extractPos(iterator(state, position))
+  end
+  return newIterator, state, init
+end
+
+function toTable(iterator, state, init)
+  local table = {}
+  for k, v in iterator, state, init do
+    table[k] = v
+  end
+  return table
+end
+
+__lunit = {}
+
+function __lunit.toTable()
+  local t = {a=1, b=2}
+  local t2 = toTable(pairs(t))
+  lunit.areEqual(t, t2)
+end
+
+function __lunit.select()
+  local t = {a=1, b=2}
+  local function inc(k, v) return k, v+1 end
+  local t2 = toTable(select(inc, pairs(t)))
+  lunit.areEqual({a=2, b=3}, t2)
+  local t3 = toTable(select(inc, select(inc, pairs(t))))
+  lunit.areEqual({a=3, b=4}, t3)
+end
