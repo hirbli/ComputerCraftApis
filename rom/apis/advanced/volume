@@ -1,0 +1,69 @@
+local table = loader.requireApi("table")
+local object = loader.requireApi("object")
+local iterator = loader.requireApi("iterator")
+
+local class, inst = object:createSubclass("volume")
+loader.installAsApi(class)
+
+
+local function makeKey(index)
+  return index.x.."\0"..index.y.."\0"..index.z
+end
+
+local function breakKey(key)
+  local f, s, p = string.gmatch(key, "[-0-9]+")
+  local x = f(s, p)
+  local y, t = f(s, x)
+  local z = f(s, y)
+  return vector.new(tonumber(x), tonumber(y), tonumber(z))
+end
+
+
+function inst:set(index, value)
+  self.array[makeKey(index)] = value
+end
+
+function inst:get(index)
+  return self.array[makeKey(index)]
+end
+
+function inst:init()
+  self.array = {}
+end
+
+local function kvToVector(key, val)
+  return breakKey(key), val
+end
+
+function inst:pairs()
+  return iterator.select(kvToVector, pairs(self.array))
+end
+
+
+local test = lunit.new(class)
+
+function test.keys()
+  local v = vector.new(1, 2, -4)
+  local s = makeKey(v)
+  lunit.areEqual(v, breakKey(s))
+end
+
+function test.setandget()
+  local a = class:new()
+  for i=-1,2 do
+    for j=-2,1 do
+      local v = vector.new(i, j, 4)
+      a:set(v, i*10+j)
+    end
+  end
+  for i=-1,2 do
+    for j=-2,1 do
+      local v = vector.new(i, j, 4)
+      lunit.areEqual(i*10+j, a:get(v))
+    end
+  end
+  lunit.areSame(nil, a:get(vector.new(100, 0, 0)))
+  for k, v in a:pairs() do
+    lunit.areEqual(k.x*10+k.y, a:get(k))
+  end
+end
