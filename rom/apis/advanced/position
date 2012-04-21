@@ -5,9 +5,9 @@
 --   The position and orientation is expressed in the form of a
 --   linear transformation between the computer relative coordinates and
 --   reference coordinates:
---      reference = position:apply(relative)
---   where position is the transformation and relative and reference
---   are vectors.
+--      vReference = tPosition:apply(vRelative)
+--   where tPosition is the transformation and vRelative and vReference
+--   are vectors in the relative and reference coordinate system.
 --   The relative coordinates are:
 --     (0, 0, 0) position of computer
 --     (1, 0, 0) one block in forward direction of computer
