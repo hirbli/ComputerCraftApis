@@ -21,12 +21,18 @@
 
 --   t1..t2..v = t1*t2..v
 
+-- Coordinate System matches F3 coordinates
+--   x:  West(-) .. East(+)   East=sunrise
+--   y:  Down(-) .. Up(+)
+--   z: North(-) .. South (+)
+-- Layed out as a regular map x axis points right, z axis points down
+
 local function vectorturn(v, turn)
   if turn==0 then return v end
   local x, z
-  if turn==1 then x, z = -v.z, v.x
+  if turn==1 then x, z = v.z, -v.x
   elseif turn==2 then x, z = -v.x, -v.z
-  elseif turn==3 then x, z = v.z, -v.x
+  elseif turn==3 then x, z = -v.z, v.x
   else error("turn must be 0, 1, 2 or 3") end
   return vector.new(x, v.y, z)
 end
