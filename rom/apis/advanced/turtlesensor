@@ -11,22 +11,20 @@ local turtle = turtle
 local rednet = rednet
 local peripheral = peripheral
 local tx = loader.requireApi("transformation")
+local position = loader.requireApi("position")
+local event = loader.requireApi("event")
 
-local dirVectors = {
-  front = vector.new(1, 0, 0),
-  back = vector.new(-1, 0, 0),
-  top = vector.new(0, 1, 0),
-  bottom = vector.new(0, -1, 0),
-  left = vector.new(0, 0, 1),
-  right = vector.new(0, 0, -1)
-}
 
-local function sensePeripherals(direction)
-  local device = peripheral.getType(direction)
-  if device=="modem" then return nil end
-  if not device then return false end
+-- Sensing blocks based on peripheral type -------------------------------
+
+local function sensePeripherals(side)
+  local device = peripheral.getType(side)
+  -- on turtle the modem is part of the turtle block and hides the block behind
+  if turtle and device=="modem" then return nil end
   return device
 end
+
+-- Sensing blocks by comparing against inventory -------------------------
 
 local compareFunc = {
   top=turtle.compareUp,
@@ -34,14 +32,24 @@ local compareFunc = {
   front=turtle.compare
 }
 
-local function compareBlock(direction)
-  local compare = compareFunc[direction]
+local function compareBlockInt(compare)
   for slot=1,9 do
     turtle.select(slot)
     if compare() then return slot end
   end
-  return nil
+  return
 end
+
+local function compareBlock(side)
+  local compare = compareFunc[side]
+  if not compare then return end
+  local oldSlot = turtle.getSelectedSlot()
+  local result = compareBlockInt(compare)
+  turtle.select(oldSlot)
+  return result
+end
+
+-- Sensing presence of blocks --------------------------------------------
 
 local detectFunc = {
   top=turtle.detectUp,
@@ -49,36 +57,51 @@ local detectFunc = {
   front=turtle.detect
 }
 
-local function senseBlock(direction)
-  local detectFunc = detectFunc[direction]
+local function detectBlock(side)
+  local detectFunc = detectFunc[side]
   if not detectFunc then return nil end
-  local detect = detectFunc()
+  return detectFunc()
+end
+
+-- Combining Sense Results ----------------------------------------------
+
+local function senseBlock(side)
+  local detect = detectBlock(side)
   if not detect then return false end
-  if false then
-    local oldSlot = turtle.getSelectedSlot()
-    detect = compareBlock(direction)
-    turtle.select(oldSlot)
-  end
+  detect = compareBlock(side)
   return detect or true
 end
 
-local function senseInt(direction)
-  local result = sensePeripherals(direction)
+local function senseInt(side)
+  local result = sensePeripherals(side)
   if result then return result end
-  return senseBlock(direction)
+  return senseBlock(side)
 end
 
-local function sense(direction)
-  local result = senseInt(direction)
-  print("sense('"..direction.."')="..tostring(result))
+local function sense(side)
+  local result = senseInt(side)
   return result
 end
 
+blockSensed = event.new()
+
 local function senseAll()
-  sense("top")
-  sense("bottom")
-  sense("front")
+  for side, offset in pairs(position.sideVectors) do
+    local result = sense(side)
+    if result ~= nil then
+      local v = position.getCurrent() + offset
+      blockSensed:call(v, result)
+    end
+  end
 end
+
+local function printSenseResult(v, result)
+  if result then
+    print("sense("..v.x..","..v.y..","..v.z..")="..tostring(result))
+  end
+end
+
+-- blockSensed:add(printSenseResult)
 
 turtle.moved:add(senseAll)
 turtle.turned:add(senseAll)

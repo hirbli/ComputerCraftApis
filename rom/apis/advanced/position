@@ -8,11 +8,7 @@
 --      vReference = tPosition:apply(vRelative)
 --   where tPosition is the transformation and vRelative and vReference
 --   are vectors in the relative and reference coordinate system.
---   The relative coordinates are:
---     (0, 0, 0) position of computer
---     (1, 0, 0) one block in forward direction of computer
---     (0, 1, 0) one block above computer
---     (0, 0, 1) one block to the right of the computer
+--   For explanation of relative coordinate system see diagrams below.
 --   The reference coordinate system is initialized to be the same
 --   as the relative coordinate system, but stays in place while
 --   the turtle moves.
@@ -25,6 +21,56 @@
 
 local persist = loader.requireApi("persistency")
 local tx = loader.requireApi("transformation")
+
+
+-- Relative Coordinate System ------------------------------------------
+
+-- Turtle seen from above:
+--                 (1, 0, 0)
+--                side=front
+--              turtle.forward()
+--
+--  (0, 0, -1)     (0, 0, 0)      (0, 0, 1)
+--   side=left      Turtle        side=right
+--    Pickaxe                       Modem
+--
+--                side=back
+--              turtle.back()
+--                (-1, 0, 0)
+--
+--               Player when
+--             placing turtle
+
+-- Computer seen from above:
+--
+--                 (1, 0, 0)
+--                side=back
+--
+--  (0, 0, -1)     (0, 0, 0)      (0, 0, 1)
+--   side=left    Computer        side=right
+--
+--                side=front
+--                 screen
+--                (-1, 0, 0)
+--
+--               Player when
+--             placing computer
+
+
+-- Sides of Turtle and Computer as Vectors --------------------------------
+
+local frontBack = -1
+if turtle then frontBack = 1 end
+
+sideVectors = {
+  front = vector.new(frontBack, 0, 0),
+  back = vector.new(-frontBack, 0, 0),
+  top = vector.new(0, 1, 0),
+  bottom = vector.new(0, -1, 0),
+  left = vector.new(0, 0, 1),
+  right = vector.new(0, 0, -1)
+}
+
 
 -- Position Logic ---------------------------------------------------------
 
@@ -58,6 +104,10 @@ function stopMoving(success)
   location:store()
 end
 
+function getCurrent()
+  return location.value.pos:apply(vector.new(0,0,0))
+end
+
 __lunit = {}
 
 local function check(x, y, z, t)
@@ -77,6 +127,6 @@ function __lunit.path()
   stopMoving(true)
   startMoving(fw)
   stopMoving(true)
-  lunit.areEqual(vector.new(1, 0, -1), location.value.pos:apply(vector.new(0, 0, 0)))
+  lunit.areEqual(vector.new(1, 0, -1), getCurrent())
   lunit.areEqual(vector.new(1, 0, -2), location.value.pos:apply(vector.new(1, 0, 0)))
 end
