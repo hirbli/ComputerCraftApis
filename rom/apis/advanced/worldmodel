@@ -1,0 +1,19 @@
+-- World Model
+
+if not turtle then return false end
+
+local turtlesensor = loader.requireApi("turtlesensor")
+local volume = loader.requireApi("volume")
+local event = loader.requireApi("event")
+
+model = volume:new()
+update = event.new()
+
+local function blockSensed(v, result)
+  local previous = model:get(v)
+  if previous == result then return end  
+  model:set(v, result)
+  update:call(v, previous, result)
+end
+
+turtlesensor.blockSensed:add(blockSensed)
