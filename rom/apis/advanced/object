@@ -22,12 +22,12 @@
 
 -- for lua 5.1
 local oldPairs = pairs
-function pairs(t)
+local function newPairs(t)
   local mt = getmetatable(t)
-  local p = mt.__pairs or oldPairs
+  local p = (mt and mt.__pairs) or oldPairs
   return p(t)
 end
-
+rawset(_G, 'pairs', newPairs)
 
 
 local function createVTable(class)
