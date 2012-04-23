@@ -17,16 +17,17 @@
 --     function instance:init(...) initialize class end
 
 local function createVTable(class)
+  local mt = {}
   local vt = {}
-  vt.__index = vt
+  mt.__index = vt
   function vt.getClass() return class end
-  class._vtable = vt
-  return vt
+  class._metatable = mt
+  return vt, mt
 end
 
 local function createInstanceFromClass(class)
   local inst = {}
-  return setmetatable(inst, class._vtable)
+  return setmetatable(inst, class._metatable)
 end
 
 local metaclass = {}
@@ -47,29 +48,32 @@ local object = createInstanceFromClass(metaclass)
 object.className = "object"
 local objectvt = createVTable(object)
 function object:createSubclass(name)
-  local subclass = createInstanceFromClass(metaclass)
-  local subclassvt = createVTable(subclass)
-  subclass.className = name
-  subclass.super = self
-  table.copyNoOverwrite(self, subclass)
-  table.copyNoOverwrite(self._vtable, subclassvt)
-  return subclass, subclassvt
+  local class = createInstanceFromClass(metaclass)
+  local vt, mt = createVTable(class)
+  class.className = name
+  class.super = self
+  vt.super = self._metatable.__index
+  table.copyNoOverwrite(self, class)
+  table.copyNoOverwrite(self._metatable, mt)
+  table.copyNoOverwrite(self._metatable.__index, vt)
+  return class, vt, mt
 end
 
-__lunit = {}
+local test = {}
+object.__lunit = test
 
-function __lunit.object()
+function test.object()
   lunit.areEqual("object", object:getClassName())
   lunit.areEqual(nil, object:getSuper())
   lunit.areSame(metaclass, object:getClass())
 end
-function __lunit.instance()
+function test.instance()
   local o = object:new()
   lunit.areSame(object, o:getClass())
   local o2 = object:new()
   lunit.areSame(true, o~=o2)
 end
-function __lunit.subclass()
+function test.subclass()
   local x, vt = object:createSubclass("x")
   function vt:init(a) self.val = a end
   lunit.areEqual("x", x:getClassName())
@@ -77,6 +81,18 @@ function __lunit.subclass()
   local o = x:new(4)
   lunit.areSame(x, o:getClass())
   lunit.areEqual(4, o.val)
+end
+function test.subSubClass()
+  local x, vt = object:createSubclass("x")
+  function vt:init(a) self.x = a end
+  function vt:test() return 1 end
+  local y, vt = x:createSubclass("y")
+  function vt:init(a) self.y = a; self.super.init(self, a) end
+  function vt:test() return 2 end
+  local o = y:new(2)
+  lunit.areEqual(2, o.x)
+  lunit.areEqual(2, o.y)
+  lunit.areEqual(2, o:test())
 end
 
 loader.installAsApi(object)
