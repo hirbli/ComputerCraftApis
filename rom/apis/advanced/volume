@@ -13,7 +13,7 @@ loader.installAsApi(class)
 
 
 local function makeKey(index)
-  return index.x.."\0"..index.y.."\0"..index.z
+  return index.x.."\t"..index.y.."\t"..index.z
 end
 
 local function breakKey(key)
@@ -25,23 +25,23 @@ local function breakKey(key)
 end
 
 
-function inst:set(index, value)
+function inst:__newindex(index, value)
   self.array[makeKey(index)] = value
 end
 
-function inst:get(index)
+function inst:__index(index)
   return self.array[makeKey(index)]
 end
 
 function inst:init()
-  self.array = {}
+  rawset(self, 'array', {})
 end
 
 local function kvToVector(key, val)
   return breakKey(key), val
 end
 
-function inst:pairs()
+function inst:__pairs()
   return iterator.select(kvToVector, pairs(self.array))
 end
 
@@ -59,17 +59,18 @@ function test.setandget()
   for i=-1,2 do
     for j=-2,1 do
       local v = vector.new(i, j, 4)
-      a:set(v, i*10+j)
+      a[v] = i*10+j
     end
   end
   for i=-1,2 do
     for j=-2,1 do
       local v = vector.new(i, j, 4)
-      lunit.areEqual(i*10+j, a:get(v))
+      lunit.areEqual(i*10+j, a[v])
     end
   end
-  lunit.areSame(nil, a:get(vector.new(100, 0, 0)))
-  for k, v in a:pairs() do
-    lunit.areEqual(k.x*10+k.y, a:get(k))
+  lunit.areSame(nil, a[vector.new(100, 0, 0)])
+  -- can be replaced by pairs(a) in lua 5.2
+  for k, v in pairs(a) do
+    lunit.areEqual(k.x*10+k.y, a[k])
   end
 end

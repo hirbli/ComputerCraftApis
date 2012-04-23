@@ -16,18 +16,31 @@
 --     function instance:myInstanceMethod() end
 --     function instance:init(...) initialize class end
 
+-- Todo:
+--   classes using __index will hide some keys for their local storage: create indexer wrappers that redirect via a per instance metatable.
+
+
+-- for lua 5.1
+local oldPairs = pairs
+function pairs(t)
+  local mt = getmetatable(t)
+  local p = mt.__pairs or oldPairs
+  return p(t)
+end
+
+
+
 local function createVTable(class)
-  local mt = {}
   local vt = {}
-  mt.__index = vt
+  vt.__index = vt
   function vt.getClass() return class end
-  class._metatable = mt
-  return vt, mt
+  class._vtable = vt
+  return vt
 end
 
 local function createInstanceFromClass(class)
   local inst = {}
-  return setmetatable(inst, class._metatable)
+  return setmetatable(inst, class._vtable)
 end
 
 local metaclass = {}
@@ -40,7 +53,8 @@ function metaclassvt:getClassName()
 end
 function metaclassvt:new(...)
   o = createInstanceFromClass(self)
-  if o.init then o:init(...) end
+  local init = self._vtable.init
+  if init then init(o, ...) end
   return o
 end
 
@@ -49,14 +63,13 @@ object.className = "object"
 local objectvt = createVTable(object)
 function object:createSubclass(name)
   local class = createInstanceFromClass(metaclass)
-  local vt, mt = createVTable(class)
+  local vt = createVTable(class)
   class.className = name
   class.super = self
-  vt.super = self._metatable.__index
+  vt.super = self._vtable.__index
   table.copyNoOverwrite(self, class)
-  table.copyNoOverwrite(self._metatable, mt)
-  table.copyNoOverwrite(self._metatable.__index, vt)
-  return class, vt, mt
+  table.copyNoOverwrite(self._vtable, vt)
+  return class, vt
 end
 
 local test = {}
