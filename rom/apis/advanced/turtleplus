@@ -25,7 +25,7 @@ local dirVectors = {
 }
 
 local function wrapMove(move, name)
-  local t = tx.move(dirVectors[name])
+  local t = tx:move(dirVectors[name])
   return function()
     position.startMoving(t)
     local ret = move()
@@ -38,7 +38,7 @@ end
 local turnDirections = {turnLeft=1, turnRight=3}
 
 local function wrapTurn(turn, name)
-  local t = tx.turn(turnDirections[name])
+  local t = tx:turn(turnDirections[name])
   return function()
     position.startMoving(t)
     local ret = turn()

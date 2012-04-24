@@ -27,6 +27,13 @@
 --   z: North(-) .. South (+)
 -- Layed out as a regular map x axis points right, z axis points down
 
+local vector = vector
+local object = loader.require.object
+
+local class, vtable = object:createSubclass("transformation")
+loader.installAsApi(class)
+
+
 local function vectorturn(v, turn)
   if turn==0 then return v end
   local x, z
@@ -40,54 +47,52 @@ end
 local origin = vector.new(0, 0, 0)
 
 
-local tx = {}
-tx.__index = tx
-
-function newFromTable(table)
+function class:newFromTable(table)
   local v = table.offset
   table.offset = vector.new(v.x, v.y, v.z)
-  return setmetatable(table, tx)
+  return setmetatable(table, self._vtable)
 end
 
-function new(offset, turn)
-  return setmetatable({offset=offset, turn=turn}, tx)
+function vtable:init(offset, turn)
+  self.offset = offset
+  self.turn = turn
 end
 
-function tx:inverse()
+function vtable:inverse()
   local turn = (4-self.turn)%4
   local offset = -vectorturn(self.offset, self.turn)
-  return new(offset, turn)
+  return class:new(offset, turn)
 end
 
-function tx:concat(t2)
+function vtable:concat(t2)
   local turn = (self.turn + t2.turn)%4
   local offset = t2.offset + vectorturn(self.offset, (4-t2.turn)%4)
-  return new(offset, turn)
+  return class:new(offset, turn)
 end
 
-function tx:apply(v)
+function vtable:apply(v)
   return vectorturn(v + self.offset, self.turn)
 end
 
-identity = new(origin, 0)
+class.identity = class:new(origin, 0)
 
-function turn(turn)
+function class:turn(turn)
   if turn<0 or turn>=4 then error("turn out of range") end
-  return new(origin, turn)
+  return self:new(origin, turn)
 end
 
-function move(offset)
-  return new(offset, 0)
+function class:move(offset)
+  return self:new(offset, 0)
 end
 
-__lunit = {}
+local test = lunit.new(class)
 
-function __lunit.vectorturn()
+function test.vectorturn()
   local v = vector.new(1, 2, 3)
   local vt = v
   for i=0,3 do
     lunit.areEqual(vt, vectorturn(v, i))
-    lunit.areEqual(vt, turn(i):apply(v))
+    lunit.areEqual(vt, class:turn(i):apply(v))
     vt = vectorturn(vt, 1)
   end
 end
@@ -104,22 +109,22 @@ local function createTestVectors()
   return vectors
 end
 
-function __lunit.inverse()
+function test.inverse()
   local vectors = createTestVectors()
   for t=0,3 do
-    local tx = new(vector.new(1, 2, 3), t)
+    local tx = class:new(vector.new(1, 2, 3), t)
     local ti = tx:inverse()
-    lunit.areEqual(identity, tx:concat(ti))
-    lunit.areEqual(identity, ti:concat(tx))
+    lunit.areEqual(class.identity, tx:concat(ti))
+    lunit.areEqual(class.identity, ti:concat(tx))
     for i, v in ipairs(vectors) do
       lunit.areEqual(v, ti:apply(tx:apply(v)))
     end
   end
 end
 
-function __lunit.applyconcat()
-  local t1 = new(vector.new(1, 2, 3), 1)
-  local t2 = new(vector.new(4, 5, 6), 2)
+function test.applyconcat()
+  local t1 = class:new(vector.new(1, 2, 3), 1)
+  local t2 = class:new(vector.new(4, 5, 6), 2)
   local vectors = createTestVectors()
   for i, v in ipairs(vectors) do
     local apply = t1:apply(t2:apply(v))

@@ -77,7 +77,7 @@ sideVectors = {
 --local myID = os.getComputerID()
 local initialLocation = {pos=tx.identity, moving=false}
 local location = persist.new("position", initialLocation)
-location.value.pos = tx.newFromTable(location.value.pos)
+location.value.pos = tx:newFromTable(location.value.pos)
 if location.value.moving then
   print("Position was changing during shutdown, resetting.")
   location.value = initialLocation
@@ -117,13 +117,13 @@ end
 
 function __lunit.path()
   location.value = initialLocation
-  local fw = tx.move(vector.new(1, 0, 0))
+  local fw = tx:move(vector.new(1, 0, 0))
   startMoving(fw)
   stopMoving(false)
   startMoving(fw)
   stopMoving(true)
   lunit.areEqual(fw, location.value.pos)
-  startMoving(tx.turn(1))
+  startMoving(tx:turn(1))
   stopMoving(true)
   startMoving(fw)
   stopMoving(true)
