@@ -1,9 +1,9 @@
 function new(func)
   local methods = {
     __index = function(table, key)
-	  local value = func(key)
+      local value = func(key)
       table[key] = value
-	  return value
+      return value
     end
   }
   return setmetatable({}, methods)
