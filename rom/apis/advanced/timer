@@ -3,7 +3,7 @@
 -- Purpose:
 --   provide object oriented access to the timer functionality
 
-loader.requireApi("dispatcher")
+local dispatcher = loader.require.dispatcher
 
 local vtable = {}
 vtable.__index = vtable

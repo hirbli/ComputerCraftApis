@@ -1,4 +1,4 @@
-loader.requireApi("autotable")
+local autotable = loader.require.autotable
 
 local event = {}
 event.__index = event

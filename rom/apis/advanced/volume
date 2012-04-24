@@ -4,9 +4,9 @@
 --   Associate coordinates expressed as vectors with values
 
 
-local table = loader.requireApi("table")
-local object = loader.requireApi("object")
-local iterator = loader.requireApi("iterator")
+local table = loader.require.table
+local object = loader.require.object
+local iterator = loader.require.iterator
 
 local class, inst = object:createSubclass("volume")
 loader.installAsApi(class)

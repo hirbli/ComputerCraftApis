@@ -33,7 +33,7 @@ local function installApi(name, env)
       api[k] =  v
     end
   end
-  rawset(_G, name, api)
+  --rawset(_G, name, api)
   apiInstalled[name] = api
   --print("installing API "..name)
 end
@@ -89,6 +89,16 @@ function requireApi(name)
   end
   return api
 end
+
+require = {}
+local rqvt = {}
+function rqvt:__index(key)
+  return requireApi(key)  
+end
+function rqvt:__newindex()
+  error("can not overwrite apis")
+end
+setmetatable(require, rqvt)
 
 local function scanApiDir(apis, directory)
   local files = fs.list(directory)

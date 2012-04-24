@@ -16,6 +16,8 @@
 --     function instance:myInstanceMethod() end
 --     function instance:init(...) initialize class end
 
+local table = loader.require.table
+
 -- lua 5.2 functionality for lua 5.1 ----------------------------------
 
 local oldPairs = pairs
