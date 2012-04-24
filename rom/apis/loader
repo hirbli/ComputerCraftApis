@@ -13,7 +13,7 @@ local apiPaths
 local apiTable
 local apiLoading = {}
 local apiLoaded = {}
-local apiInstalled = {}
+apiInstalled = {}
 local apiCurrent
 local apiIncludeOriginal = {}
 local apiUseTable = {}

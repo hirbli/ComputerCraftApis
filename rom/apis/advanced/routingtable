@@ -1,10 +1,10 @@
 -- Routing Table --------------------------------------------
 
-local table = loader.requireApi("table")
+local table = loader.require.table
+local object = loader.require.object
 
-
-local vtable = {}
-vtable.__index = vtable
+local class, vtable = object:createSubclass("routingtable")
+loader.installAsApi(class)
 
 function vtable:getRoute(dst)
   return self.gateways[dst]
@@ -60,24 +60,20 @@ function vtable:removeRouting(node)
   self:addRouting(node, nil)
 end
 
-function new(myID)
-  local table = {
-    myID = myID,
-    -- for each destination store next hop and number of hops to destination
-    gateways = {},
-    hops = {},
-    -- for each node a mapping from dst to hops
-    routingDistMaps = {}
-  }
-  setmetatable(table, vtable)
-  table:updateRoutingTable({[myID]=true})
-  return table
+function vtable:init(myID)
+  self.myID = myID
+  -- for each destination store next hop and number of hops to destination
+  self.gateways = {}
+  self.hops = {}
+  -- for each node a mapping from dst to hops
+  self.routingDistMaps = {}
+  self:updateRoutingTable({[myID]=true})
 end
 
-__lunit = {}
+local test = lunit.new(class)
 
-function __lunit.routing()
-  local rt = new(6)
+function test.routing()
+  local rt = class:new(6)
   local function check(expected, dest, hops)
     lunit.areEqual(expected, rt:getRoute(dest))
     if hops then lunit.areEqual(hops, rt.hops[dest]) end

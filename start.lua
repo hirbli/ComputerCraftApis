@@ -60,8 +60,11 @@ local function loadApi(name, path)
   _G[name] = api
 end
 
+print("load basics")
 loadApi("loader", "rom/apis/loader")
 loadApi("lunit", "rom/apis/lunit")
 loadApi("vector", "rom/apis/vector")
+print("initialize APIs")
 loader.initializeApis()
+print("running unit tests")
 lunit.run()

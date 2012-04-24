@@ -166,7 +166,7 @@ periodic:add(messagePeriodic)
 
 local myID = os.getComputerID()
 
-routing = routingtable.new(myID)
+routing = routingtable:new(myID)
 
 receiveEvent = event.new()
 receiveProtocol = event.newTable()

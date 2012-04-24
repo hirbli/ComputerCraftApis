@@ -12,7 +12,7 @@ end
 __lunit = {}
 
 function __lunit.fill()
-  local t = autotable.new(function(k) return k end)
+  local t = new(function(k) return k end)
   lunit.areEqual(1, t[1])
   lunit.areEqual(2, t[2])
   t[1] = 3
