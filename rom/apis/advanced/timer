@@ -4,9 +4,10 @@
 --   provide object oriented access to the timer functionality
 
 local dispatcher = loader.require.dispatcher
+local object = loader.require.object
 
-local vtable = {}
-vtable.__index = vtable
+local class, vtable = object:createSubclass("timer")
+loader.installAsApi(class)
 
 local timersByID = {}
 
@@ -25,8 +26,8 @@ function vtable:setAlarm(time)
   timersByID[id] = self
 end
 
-function new(callback)
-  return setmetatable({callback=callback}, vtable)
+function vtable:init(callback)
+  self.callback = callback
 end
 
 local function timerExpired(event, id)
@@ -45,10 +46,10 @@ end
 dispatcher.filteredEvents.timer:add(timerExpired)
 dispatcher.filteredEvents.alarm:add(timerExpired)
 
-__lunit = {}
+local test = lunit.new(class)
 
-function __lunit.create()
+function test.create()
   local f = function() end
-  local t = new(f)
+  local t = class:new(f)
   lunit.areEqual("function", type(t.startTimer))
 end

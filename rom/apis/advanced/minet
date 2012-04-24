@@ -303,5 +303,5 @@ end
 -- Initialization --------------------------------------------------
 
 dispatcher.filteredEvents.rednet_message:add(receiveMessageEvent)
-local periodicTimer = timer.new(runPeriodic)
+local periodicTimer = timer:new(runPeriodic)
 periodicTimer:startPeriodic(1)
