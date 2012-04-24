@@ -3,10 +3,11 @@
 -- Purpose:
 --   store and read structured data from file to survive shutdowns
 
-local ser = loader.requireApi("serializer")
+local ser = loader.require.serializer
+local object = loader.require.object
 
-local vtable = {}
-vtable.__index = vtable
+local class, vtable = object:createSubclass("persistency")
+loader.installAsApi(class)
 
 function vtable:load()
   local file = io.open(self.path, "r")
@@ -24,11 +25,12 @@ function vtable:store()
   file:close()
 end
 
-function new(name, initialValue)
-  local path = "persistency/"
+local path = "persistency/"
+
+function vtable:init(name, initialValue)
   if not fs.exists(path) then fs.makeDir(path) end
-  local p = {value=initialValue, name=name, path=path..name}
-  setmetatable(p, vtable)
-  p:load()
-  return p
+  self.value = initialValue
+  self.name = name
+  self.path = path..name
+  self:load()
 end

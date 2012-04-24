@@ -76,7 +76,7 @@ sideVectors = {
 
 --local myID = os.getComputerID()
 local initialLocation = {pos=tx.identity, moving=false}
-local location = persist.new("position", initialLocation)
+local location = persist:new("position", initialLocation)
 location.value.pos = tx:newFromTable(location.value.pos)
 if location.value.moving then
   print("Position was changing during shutdown, resetting.")
