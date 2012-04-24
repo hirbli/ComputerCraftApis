@@ -25,11 +25,11 @@ local function breakKey(key)
 end
 
 
-function inst:__newindex(index, value)
+function inst:newindex(index, value)
   self.array[makeKey(index)] = value
 end
 
-function inst:__index(index)
+function inst:index(index)
   return self.array[makeKey(index)]
 end
 

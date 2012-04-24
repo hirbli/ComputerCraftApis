@@ -16,11 +16,8 @@
 --     function instance:myInstanceMethod() end
 --     function instance:init(...) initialize class end
 
--- Todo:
---   classes using __index will hide some keys for their local storage: create indexer wrappers that redirect via a per instance metatable.
+-- lua 5.2 functionality for lua 5.1 ----------------------------------
 
-
--- for lua 5.1
 local oldPairs = pairs
 local function newPairs(t)
   local mt = getmetatable(t)
@@ -29,6 +26,28 @@ local function newPairs(t)
 end
 rawset(_G, 'pairs', newPairs)
 
+-- helpers for creating indexed objects ------------------------------
+
+local function doRedir(op, self, ...)
+  local target = getmetatable(self).target
+  return getmetatable(target)[op](target, ...)
+end
+
+local function wrapIndexerObject(object)
+  local redir = {}
+  redir.target = object
+  function redir.__index(...) return doRedir('index', ...) end
+  function redir.__newindex(...) return doRedir('newindex', ...) end
+  local vt = getmetatable(object)
+  for name, func in pairs(vt) do
+    if string.match(name, "^__") and type(func)=="function" then
+      redir[name] = function(...) return doRedir(name, ...) end
+    end
+  end
+  return setmetatable({}, redir)
+end
+
+-- Class / Instance Relation -----------------------------------
 
 local function createVTable(class)
   local vt = {}
@@ -39,9 +58,15 @@ local function createVTable(class)
 end
 
 local function createInstanceFromClass(class)
+  local vtable = class._vtable
+  if vtable.__index ~= vtable or vtable.__newindex ~= nil then
+    error("do not overwrite __index or __newindex, use index and newindex instead.")
+  end
   local inst = {}
-  return setmetatable(inst, class._vtable)
+  return setmetatable(inst, vtable)
 end
+
+-- Metaclass the Class of All Classes ---------------------------
 
 local metaclass = {}
 local metaclassvt = createVTable(metaclass)
@@ -55,8 +80,13 @@ function metaclassvt:new(...)
   o = createInstanceFromClass(self)
   local init = self._vtable.init
   if init then init(o, ...) end
+  if self._vtable.index then
+    return wrapIndexerObject(o)
+  end 
   return o
 end
+
+-- Object, the Superclass of All Classes --------------------------
 
 local object = createInstanceFromClass(metaclass)
 object.className = "object"
@@ -72,6 +102,8 @@ function object:createSubclass(name)
   return class, vt
 end
 
+-- Testing ---------------------------------------------------------
+
 local test = {}
 object.__lunit = test
 
@@ -80,12 +112,14 @@ function test.object()
   lunit.areEqual(nil, object:getSuper())
   lunit.areSame(metaclass, object:getClass())
 end
+
 function test.instance()
   local o = object:new()
   lunit.areSame(object, o:getClass())
   local o2 = object:new()
   lunit.areSame(true, o~=o2)
 end
+
 function test.subclass()
   local x, vt = object:createSubclass("x")
   function vt:init(a) self.val = a end
@@ -95,6 +129,7 @@ function test.subclass()
   lunit.areSame(x, o:getClass())
   lunit.areEqual(4, o.val)
 end
+
 function test.subSubClass()
   local x, vt = object:createSubclass("x")
   function vt:init(a) self.x = a end
@@ -106,6 +141,18 @@ function test.subSubClass()
   lunit.areEqual(2, o.x)
   lunit.areEqual(2, o.y)
   lunit.areEqual(2, o:test())
+end
+
+function test.indexer()
+  local x, vt = object:createSubclass("x")
+  function vt:init(inc) self.table = {}; self.inc = inc end
+  function vt:index(key) return self.table[key] end
+  function vt:increment(value) return value+self.inc end
+  function vt:newindex(key, value) self.table[key]=self:increment(value) end
+  local o = x:new(1)
+  lunit.areSame(nil, o['table'])
+  o.table = 15
+  lunit.areSame(16, o.table)
 end
 
 loader.installAsApi(object)
