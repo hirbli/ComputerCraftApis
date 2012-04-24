@@ -38,7 +38,7 @@ local routingtable = loader.requireApi("routingtable")
 
 -- Periodic ------------------------------------------------------
 
-local periodic = event.new()
+local periodic = event:new()
 
 function runPeriodic()
   periodic:call()
@@ -49,8 +49,8 @@ end
 neighbors = {}
 local neighbors = neighbors
 local neighborTimeout = 10
-local neighborDiscovered = event.new()
-local neighborLost = event.new()
+local neighborDiscovered = event:new()
+local neighborLost = event:new()
 
 local function neighborAlive(node)
   if not neighbors[node] then neighborDiscovered:call(node) end
@@ -168,8 +168,8 @@ local myID = os.getComputerID()
 
 routing = routingtable:new(myID)
 
-receiveEvent = event.new()
-receiveProtocol = event.newTable()
+receiveEvent = event:new()
+receiveProtocol = event:newTable()
 
 local function receiveLocal(header, payload)
   local dst = header.dst

@@ -14,12 +14,12 @@
 
 -- Todo: test pullEvent()
 
-local event = loader.requireApi("event")
+local event = loader.require.event
 
-allEvents = event.new()
+allEvents = event:new()
 local eventThread = {}
 
-filteredEvents = event.newTable()
+filteredEvents = event:newTable()
 
 function run(filter)
   while true do

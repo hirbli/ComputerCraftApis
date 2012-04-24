@@ -83,7 +83,7 @@ local function sense(side)
   return result
 end
 
-blockSensed = event.new()
+blockSensed = event:new()
 
 local function senseAll()
   for side, offset in pairs(position.sideVectors) do

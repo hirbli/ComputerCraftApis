@@ -14,8 +14,8 @@ local table = loader.requireApi("table")
 local event = loader.requireApi("event")
 local tx = loader.requireApi("transformation")
 
-local moved = event.new()
-local turned = event.new()
+local moved = event:new()
+local turned = event:new()
 
 local dirVectors = {
   forward = vector.new(1, 0, 0),

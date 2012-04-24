@@ -1,14 +1,15 @@
 local autotable = loader.require.autotable
+local object = loader.require.object
 
-local event = {}
-event.__index = event
+local class, vtable = object:createSubclass("event")
+loader.installAsApi(class)
 
-function event:add(handler)
+function vtable:add(handler)
   if type(handler)~="function" then error("handler must be a function, but is "..tostring(handler)) end
   self[handler] = (self[handler] or 0) + 1
 end
 
-function event:remove(handler)
+function vtable:remove(handler)
   local count = self[handler]
   if not count then error("can not remove event handler") end
   count = count - 1
@@ -16,7 +17,7 @@ function event:remove(handler)
   self[handler] = count
 end
 
-function event:call(...)
+function vtable:call(...)
   for h, c in pairs(self) do
     for i=1,c do
       h(...)
@@ -24,7 +25,7 @@ function event:call(...)
   end
 end
 
-function event:pcall(...)
+function vtable:pcall(...)
   for h, c in pairs(self) do
     for i=1,c do
       pcall(h, ...)
@@ -32,18 +33,14 @@ function event:pcall(...)
   end
 end
 
-function new()
-  return setmetatable({}, event)
+function class:newTable()
+  return autotable.new(function() return class:new() end)
 end
 
-function newTable()
-  return autotable.new(new)
-end
+local test = lunit.new(class)
 
-__lunit = {}
-
-function __lunit.singleEvent()
-  local e = new()
+function test.singleEvent()
+  local e = class:new()
   local count = 0
   local f = function() count = count + 1 end
   local farg = function(a) lunit.areEqual(7, a) end
@@ -66,8 +63,8 @@ function __lunit.singleEvent()
   e:pcall(6)
 end
 
-function __lunit.tableEvent()
-  local e = newTable()
+function test.tableEvent()
+  local e = class:newTable()
   local count = 0
   local f = function() count = count + 1 end
   e.a:call()
