@@ -1,3 +1,5 @@
+local minet = loader.require.minet
+
 local function usage(message)
   if message then print("Error: "..message) end
   print("Usage: ping <destination>")

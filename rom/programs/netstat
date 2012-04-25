@@ -1,4 +1,4 @@
-local minet = minet
+local minet = loader.require.minet
 local routing = minet.routing
 
 local function showNode(node)

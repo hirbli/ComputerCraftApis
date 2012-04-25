@@ -389,6 +389,7 @@ if turtle then
 end
 
 loader.initializeApis()
+local dispatcher = loader.require.dispatcher
 
 -- Run the shell
 local ok, err = pcall( function()

@@ -10,9 +10,9 @@ model = volume:new()
 update = event:new()
 
 local function blockSensed(v, result)
-  local previous = model:get(v)
+  local previous = model[v]
   if previous == result then return end  
-  model:set(v, result)
+  model[v] = result
   update:call(v, previous, result)
 end
 

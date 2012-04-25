@@ -1,3 +1,7 @@
+local dispatcher = loader.require.dispatcher
+local minet = loader.require.minet
+local serializer = loader.require.serializer
+
 local function usage(message)
   if message then print("Error: "..message) end
   print("Usage: netdump [raw]")

@@ -1,1 +1,2 @@
+local minet = loader.require.minet
 minet.openModems()

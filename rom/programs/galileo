@@ -1,6 +1,8 @@
 -- todo:
 --  relative setup
 
+local galileo = loader.require.galileo
+
 local function usage(message)
   if message then print("Error: "..message) end
   print("Usage: galileo <command> ...")

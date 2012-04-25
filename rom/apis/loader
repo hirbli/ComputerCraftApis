@@ -59,6 +59,7 @@ local function loadApi(name, path)
   apiLoading[name] = true
   apiCurrent = name
 
+  --print("loading api "..name)
   --local success, result = pcall(loadApiFromFile, name, path)
   local success, result = true, loadApiFromFile(name, path)
   if not success then print("Error loading API "..name..": "..result)
