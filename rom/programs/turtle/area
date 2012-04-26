@@ -1,153 +1,120 @@
+local turtle = turtle
+local vector = vector
+local position = loader.require.position
+local movement = loader.require.movement
 
 local tArgs = { ... }
 if #tArgs ~= 3 then
-	print( "Usage: area <forward> <right> <down>" )
-	return
+  print( "Usage: area <forward> <right> <down>" )
+  return
 end
 
 local sizeForward = tonumber(tArgs[1])
 local sizeRight = tonumber(tArgs[2])
 local sizeDown = tonumber(tArgs[3])
 
-local xPos,zPos = 0,0
-local xDir,zDir = 0,1
-
-local function left()
-	turtle.turnLeft()
-	xDir, zDir = -zDir, xDir
-	return true
-end
-
-local function right()
-	turtle.turnRight()
-	xDir, zDir = zDir, -xDir
-	return true
-end
-
-local function forward()
-	if not turtle.forward() then return false end
-	xPos = xPos + xDir
-	zPos = zPos + zDir
-	return true
-end
+local left = turtle.turnLeft
+local right = turtle.turnRight
+local forward = turtle.forward
 
 local function directions(rl)
-	if rl then return right, left 
-	else return left, right end
+  if rl then return right, left 
+  else return left, right end
 end
 
 local function multiAnd(func, count)
 print("multiand "..count)
-	local i=0
-	while i<count do
-		if not func() then return false end
-		i = i + 1
-	end
-	return true
+  for i=1,count do
+    if not func() then return false end
+  end
+  return true
 end
 
 local function hPattern(szForward, szSide, right, doForward)
-	local turn1, turn2 = directions(right)
-	local straight = function() return multiAnd(doForward, szForward - 1) end
-	local fullturn = function(turn) return turn() and doForward() and turn() end
-	local segment = function(turn) return straight() and fullturn(turn) end
-	local segment2 = function() return segment(turn1) and segment(turn2) end
-	local twocount = math.floor((szSide - 1) / 2)
-	local rest = szSide - twocount * 2
-	local ret = multiAnd(segment2, twocount) and straight() and (rest==1 or fullturn(turn1) and straight())
+  local turn1, turn2 = directions(right)
+  local straight = function() return multiAnd(doForward, szForward - 1) end
+  local fullturn = function(turn) return turn() and doForward() and turn() end
+  local segment = function(turn) return straight() and fullturn(turn) end
+  local segment2 = function() return segment(turn1) and segment(turn2) end
+  local twocount = math.floor((szSide - 1) / 2)
+  local rest = szSide - twocount * 2
+  local ret = multiAnd(segment2, twocount) and straight() and (rest==1 or fullturn(turn1) and straight())
 end
 
-local function turnTo(xTarget, zTarget)
-	local prod = xTarget * xDir + zTarget * zDir
-	if prod > 0 then return end
-	if prod < 0 then left() left() return end
-	prod = xTarget * -zDir + zTarget * xDir
-	if prod > 0 then left()
-	else right() end
-end
-
-local function goto(xTarget, zTarget, doForward)
-	local xDelta = xTarget - xPos
-	local zDelta = zTarget - zPos
-	turnTo(xDelta, 0)
-	multiAnd(doForward, math.abs(xDelta))
-	turnTo(0, zDelta)
-	multiAnd(doForward, math.abs(zDelta))
-end
 
 local function digforward()
-	turtle.dig()
-	return forward()
+  turtle.dig()
+  return forward()
 end
 
 local function dig3forward()
-	turtle.digUp()
-	turtle.digDown()
-	if not digforward() then return false end
-	return true
+  turtle.digUp()
+  turtle.digDown()
+  if not digforward() then return false end
+  return true
 end
 
 local function collect()
-	collected = collected + 1
-	if math.fmod(collected, 25) == 0 then
-		print( "Mined "..collected.." blocks." )
-	end
-	
-	for n=1,9 do
-		if turtle.getItemCount(n) == 0 then
-			return true
-		end
-	end
-	
-	print( "No empty slots left." )
-	return false
+  collected = collected + 1
+  if math.fmod(collected, 25) == 0 then
+    print( "Mined "..collected.." blocks." )
+  end
+  
+  for n=1,9 do
+    if turtle.getItemCount(n) == 0 then
+      return true
+    end
+  end
+  
+  print( "No empty slots left." )
+  return false
 end
 
 local function tryForwards()
-	while not turtle.forward() do
-		if turtle.dig() then
-			if not collect() then
-				return false
-			end
-	    else
-			-- give sand a chance to fall
- 			sleep(0.8)
-	    	if turtle.dig() then
-	    		if not collect() then
-					return false
-				end
-	    	else
-		    	return false
-		    end
-	    end
-	end
-	xPos = xPos + xDir
-	zPos = zPos + zDir
-	return true
+  while not turtle.forward() do
+    if turtle.dig() then
+      if not collect() then
+        return false
+      end
+      else
+      -- give sand a chance to fall
+       sleep(0.8)
+        if turtle.dig() then
+          if not collect() then
+          return false
+        end
+        else
+          return false
+        end
+      end
+  end
+  xPos = xPos + xDir
+  zPos = zPos + zDir
+  return true
 end
 
 local function tryDown()
-	if not turtle.down() then
-		if turtle.digDown() then
-			if not collect() then
-				return false
-			end
-	    end
-		if not turtle.down() then
-			return false
-		end
-	end
-	depth = depth + 1
-	if math.fmod( depth, 10 ) == 0 then
-		print( "Descended "..depth.." metres." )
-	end
-	return true
+  if not turtle.down() then
+    if turtle.digDown() then
+      if not collect() then
+        return false
+      end
+      end
+    if not turtle.down() then
+      return false
+    end
+  end
+  depth = depth + 1
+  if math.fmod( depth, 10 ) == 0 then
+    print( "Descended "..depth.." metres." )
+  end
+  return true
 end
 
 print("Hirbli...")
 
-hPattern(sizeForward, sizeRight, true, dig3forward)
-print("xPos="..xPos..", zPos="..zPos..", xDir="..xDir..", zDir="..zDir)
-goto(0, 0, forward)
-turnTo(0, 1)
+hPattern(sizeForward, sizeRight, true, forward)
+print("position = "..tostring(position.getCurrent()))
+movement.goto(vecter.new(0,0,0))
+movement.turnTo(0)
 print("End")

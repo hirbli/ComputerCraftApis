@@ -38,7 +38,15 @@ end
 function rednet.broadcast()
 end
 
+peripheral={}
+function peripheral.getType() return nil end
+
 turtle={}
+function turtle.up() return true end
+function turtle.down() return true end
+function turtle.turnLeft() return true end
+function turtle.turnRight() return true end
+function turtle.forward() return true end
 
 local function loadApiFromFile(name, path)
   local env = setmetatable({}, {__index = _G})

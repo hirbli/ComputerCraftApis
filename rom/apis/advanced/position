@@ -108,12 +108,11 @@ function getCurrent()
   return location.value.pos:apply(vector.new(0,0,0))
 end
 
-__lunit = {}
-
-local function check(x, y, z, t)
-  local pos=location.value.pos
-  --pos.offset
+function getDirection()
+  return location.value.pos.turn
 end
+
+__lunit = {}
 
 function __lunit.path()
   location.value = initialLocation
@@ -129,4 +128,5 @@ function __lunit.path()
   stopMoving(true)
   lunit.areEqual(vector.new(1, 0, -1), getCurrent())
   lunit.areEqual(vector.new(1, 0, -2), location.value.pos:apply(vector.new(1, 0, 0)))
+  lunit.areEqual(1, getDirection())
 end

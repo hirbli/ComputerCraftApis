@@ -1,0 +1,53 @@
+if not turtle then return false end
+
+local turtle = turtle
+local vector = vector
+local position = loader.require.position
+
+local function multiAnd(func, count)
+  for i=1,count do
+    if not func() then return false end
+  end
+  return true
+end
+
+local function ifThenElse(sel, a, b)
+  if sel then return a end
+  return b
+end
+
+
+function turnTo(targetDir)
+  local currentDir = position.getDirection()
+  local turns = (4 + targetDir - currentDir) % 4
+  if turns==1 then turtle.turnLeft()
+  elseif turns==2 then turtle.turnLeft() turtle.turnLeft()
+  elseif turns==3 then turtle.turnRight() end
+end
+
+local function goLinear(count, step, turn)
+  if turn then turnTo(turn) end
+  return multiAnd(step, math.abs(count))
+end
+
+function goto(targetPos)
+  local delta = targetPos - position.getCurrent()
+  return goLinear(delta.x, turtle.forward, ifThenElse(delta.x>0, 0, 2)) and
+  goLinear(delta.y, ifThenElse(delta.y>0, turtle.up, turtle.down), nil) and
+  goLinear(delta.z, turtle.forward, ifThenElse(delta.z>0, 3, 1))
+end
+
+
+__lunit = {}
+local test = __lunit
+
+function test.goto()
+  local target = vector.new(3, 2, 4)
+  local res = goto(target)
+  lunit.areSame(true, res)
+  lunit.areEqual(target, position.getCurrent())
+  target = vector.new(1, 1, -3)
+  local res = goto(target)
+  lunit.areSame(true, res)
+  lunit.areEqual(target, position.getCurrent())
+end
