@@ -115,6 +115,6 @@ print("Hirbli...")
 
 hPattern(sizeForward, sizeRight, true, forward)
 print("position = "..tostring(position.getCurrent()))
-movement.goto(vecter.new(0,0,0))
+movement.goto(vector.new(0,0,0))
 movement.turnTo(0)
 print("End")
