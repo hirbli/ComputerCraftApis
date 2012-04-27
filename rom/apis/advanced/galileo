@@ -23,6 +23,47 @@
 --   regional coordinates
 --   abstraction of direction
 
+
+-- Given a triangle with sides of lengths a, b and c,
+-- placing c on the x axis starting at the origin, calculate
+-- the coordinates p=(x, y) of the meeting point of a and b
+-- a = |p| = sqrt(x*x + y*y)              ==> a*a = x*x + y*y
+-- b = |p-(c,0)| = sqrt((x-c)(x-c) + y*y) ==> b*b = x*x - 2cx + c*c + y*y
+-- subtract ==> a*a - b*b = 2cx - c*c
+local function triangle(a, b, c)
+  local x = (a*a + c*c - b*b)/(2*c)
+  local y2 = x*x - a*a
+  if y2<0 then return end
+  return x, sqrt(y)
+end
+
+local function check(xe, ye, a, b, c)
+  local xa, ya = triangle(a, b, c)
+  lunit.areSame(xe, xa)
+  lunit.areSame(ye, ya)
+end
+
+__lunit = {}
+local test = __lunit
+
+function test.triangle()
+  check(0, 0, 0, 0, 0)
+
+  check(0, 3, 3, 5, 4)
+  check(4, 3, 5, 3, 4)
+  check(0, 4, 4, 5, 3)
+  check(3, 4, 5, 4, 3)
+
+  check(1, 0, 1, 1, 2)
+  check(-1, 0, 1, 2, 1)
+  check(2, 0, 2, 1, 1)
+
+  check(nil, nil, 3, 1, 1)
+  check(nil, nil, 1, 3, 1)
+  check(nil, nil, 1, 1, 3)
+end
+
+
 do return false end -- not tested yet
 
 local minet = loader.requireApi("minet")
