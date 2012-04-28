@@ -34,7 +34,7 @@ function inst:index(index)
 end
 
 function inst:init()
-  rawset(self, 'array', {})
+  self.array = {}
 end
 
 local function kvToVector(key, val)
