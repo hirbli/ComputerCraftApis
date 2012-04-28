@@ -1,0 +1,31 @@
+function fand(a, b) return a and b end
+function fadd(a, b) return a + b end
+
+function const(value)
+  return function() return value end
+end
+function apply(func, value)
+  return function(...)
+    return func(value, ...)
+  end
+end
+function apply2(func, value)
+  return function(p1, ...)
+    return func(p1, value, ...)
+  end
+end
+function concat(f1, f2)
+  return f1(f2)
+end
+function reduce(reduceFunction, startValue)
+  return function(values)
+    local current = startValue
+    for i, v in ipairs(values) do
+      current = reduceFunction(current, v)
+    end
+    return current
+  end
+end
+function swap12(func)
+  return function(a, b, ...) return func(b, a, ...) end
+end
