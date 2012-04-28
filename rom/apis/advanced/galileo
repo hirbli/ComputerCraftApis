@@ -34,7 +34,7 @@ local function triangle(a, b, c)
   local x = (a*a + c*c - b*b)/(2*c)
   local y2 = x*x - a*a
   if y2<0 then return end
-  return x, sqrt(y)
+  return x, math.sqrt(y)
 end
 
 local function check(xe, ye, a, b, c)
