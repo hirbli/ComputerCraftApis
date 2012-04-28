@@ -1,0 +1,90 @@
+local object = loader.require.object
+local volume = loader.require.volume
+local func = loader.require.func
+
+local class, inst = object:createSubclass'distmap'
+loader.installAsApi(class)
+
+function inst:init(origin, occupy)
+  self.origin = origin
+  self.occupy = occupy
+  self.size = 1
+  self.distance = volume:new()  -- map vector --> distance
+  local v = volume:new()
+  v[origin] = false
+  self.field = {v}              -- map distance --> vector --> direction
+  self.distance[origin] = 1
+end
+
+local directions = {
+  vector.new(1, 0, 0),
+  vector.new(-1, 0, 0),
+  vector.new(0, 1, 0),
+  vector.new(0, -1, 0),
+  vector.new(0, 0, 1),
+  vector.new(0, 0, -1)
+}
+
+function inst:growOne()
+  local size = self.size + 1
+  local field = volume:new()
+  local dist = self.distance
+  for v, _ in pairs(self.field[size-1]) do
+    for _, d in ipairs(directions) do
+      local n = v + d
+      if not self.occupy(n) and not dist[n] then
+        dist[n] = size
+        field[n] = d
+      end
+    end
+  end
+  self.field[size] = field
+  self.size = size
+end
+
+function inst:shrinkOne()
+  local size = self.size
+  for v, _ in pairs(self.field[size]) do
+    self.distance[v] = nil
+  end
+  self.field[size] = nil
+  self.size = size - 1
+end
+
+function inst:getPath(source)
+  local dist = self.distance[source]
+  if not dist then return end
+  local path = {}
+  local field = self.field
+  while dist > 1 do
+    local dir = field[dist][source]
+    table.insert(path, dir)
+    source = source - dir
+    dist = dist - 1
+  end
+  return path
+end
+
+local test = lunit.new(class)
+local func = loader.require.func
+
+function test.emptyRoom()
+  local dm = class:new(vector.new(0, 0, 0), func.const(false))
+  lunit.areEqual(1, dm.size)
+  lunit.areEqual(1, dm.distance[vector.new(0, 0, 0)])
+  lunit.areEqual(false, dm.field[1][vector.new(0, 0, 0)])
+  dm:growOne()
+  lunit.areEqual(2, dm.size)
+  lunit.areEqual(1, dm.distance[vector.new(0, 0, 0)])
+  lunit.areEqual(2, dm.distance[vector.new(1, 0, 0)])
+  dm:shrinkOne()
+  lunit.areEqual(1, dm.size)
+  dm:growOne()
+  dm:growOne()
+  dm:growOne()
+  dm:growOne()
+  lunit.areEqual(5, dm.size)
+  local path = dm:getPath(vector.new(1, 1, 2))
+  lunit.areEqual(4, #path)
+  lunit.areEqual(vector.new(1, 1, 2), func.reduce(func.fadd, vector.new(0, 0, 0))(path))
+end
