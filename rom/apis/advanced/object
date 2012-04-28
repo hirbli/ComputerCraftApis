@@ -79,7 +79,7 @@ function metaclassvt:getClassName()
   return self.className
 end
 function metaclassvt:new(...)
-  o = createInstanceFromClass(self)
+  local o = createInstanceFromClass(self)
   local init = self._vtable.init
   if init then init(o, ...) end
   if self._vtable.index then
@@ -106,8 +106,7 @@ end
 
 -- Testing ---------------------------------------------------------
 
-local test = {}
-object.__lunit = test
+local test = lunit.new(object)
 
 function test.object()
   lunit.areEqual("object", object:getClassName())
@@ -155,6 +154,20 @@ function test.indexer()
   lunit.areSame(nil, o['table'])
   o.table = 15
   lunit.areSame(16, o.table)
+  local y, vty = object:createSubclass("y")
+  lunit.areSame(false, y==x)
+  lunit.areSame(false, vty==vt)
+  local yo = y:new()
+  lunit.areSame(nil, yo[index])
 end
+
+function test.newInNew()
+  local x, vtx = object:createSubclass'x'
+  local y, vty = object:createSubclass'y'
+  function vty:init() self.x = x:new() end
+  function vty:test() end
+  local o = y:new()
+  o:test()
+end  
 
 loader.installAsApi(object)
