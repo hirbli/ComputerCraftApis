@@ -46,13 +46,15 @@ local function runTests(table, path)
 end
 
 local function runTable(table, discovered, path)
-  if discovered[table] then return end
   discovered[table] = true
   for k, v in pairs(table) do
-    if k=="__lunit" then
-      runTests(v, path)
-    elseif type(k)=="string" and type(v)=="table" then
-      runTable(v, discovered, path.."."..k)
+    if type(k) == "string" and type(v) == "table" and not discovered[v] then
+      discovered[table] = true
+      if k=="__lunit" then
+        runTests(v, path)
+      elseif k~="super" then
+        runTable(v, discovered, path.."."..k)
+      end
     end
   end
 end
