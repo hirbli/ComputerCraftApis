@@ -1,0 +1,20 @@
+local position = loader.require.position
+local worldmap = loader.require.worldmap
+
+local function center(str, len)
+   local pad = (len - string.len(str))/2
+  return string.rep(' ', math.floor(pad)) .. str .. string.rep(' ', math.ceil(pad))
+end
+
+local pos = position.getCurrent()
+print('Position='..tostring(pos)..' Turn='..position.getDirection())
+for y=-1, 1 do
+  for x=-1, 1 do
+    local line = string.rep('  ', 1-x)
+    for z=-1, 1 do
+      local v = position.getTransformation():apply(vector.new(-x, -y, z))
+      line = line..' '..center(tostring(worldmap.map[v]), 8)
+    end
+    print(line)
+  end
+end
