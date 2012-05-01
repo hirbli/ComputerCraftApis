@@ -4,7 +4,7 @@ local turtle = turtle
 local vector = vector
 local position = loader.require.position
 local distmap = loader.require.distmap
-local worldmap = loader.require.worldmodel
+local worldmap = loader.require.worldmap
 
 local function multiAnd(func, count)
   for i=1,count do
@@ -51,7 +51,7 @@ function goto(targetPos)
 end
 
 local function map(v)
-  return worldmap.model[v]
+  return worldmap.map[v]
 end
 
 function find(targetPos)

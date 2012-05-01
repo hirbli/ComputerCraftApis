@@ -1,4 +1,4 @@
--- World Model
+-- World Map
 
 if not turtle then return false end
 
@@ -6,13 +6,13 @@ local turtlesensor = loader.require.turtlesensor
 local volume = loader.require.volume
 local event = loader.require.event
 
-model = volume:new()
+map = volume:new()
 update = event:new()
 
 local function blockSensed(v, result)
-  local previous = model[v]
+  local previous = map[v]
   if previous == result then return end  
-  model[v] = result
+  map[v] = result
   update:call(v, previous, result)
 end
 
