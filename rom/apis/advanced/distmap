@@ -51,6 +51,10 @@ function inst:shrinkOne()
   self.size = size - 1
 end
 
+function inst:getStep(source)
+  return self.field[self.distance[source]][source]
+end
+
 function inst:getPath(source)
   local dist = self.distance[source]
   if not dist then return end
@@ -63,6 +67,19 @@ function inst:getPath(source)
     dist = dist - 1
   end
   return path
+end
+
+function inst:growTo(v)
+  while not self.distance[v] do
+    self:growOne()
+  end
+end
+
+function inst:shrinkTo(v)
+  if self.distance[v] == 1 then error("cant remove origin") end
+  while self.distance[v] do
+    self:shrinkOne()
+  end
 end
 
 local function vectorLessEqual(a, b)
@@ -116,10 +133,8 @@ function test.wall()
   local dm = class:new(vector.new(0, 0, 0), wall)
   local path
   local target = vector.new(0, 4, 0)
-  repeat
-    dm:growOne()
-    path = dm:getPath(target)
-  until path
+  dm:growTo(target)
+  path = dm:getPath(target)
   lunit.areEqual(10, #path)
   lunit.areEqual(11, dm.size)
   lunit.areEqual(target, func.reduce(func.fadd)(path))

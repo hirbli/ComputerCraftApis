@@ -3,6 +3,8 @@ if not turtle then return false end
 local turtle = turtle
 local vector = vector
 local position = loader.require.position
+local distmap = loader.require.distmap
+local worldmap = loader.require.worldmodel
 
 local function multiAnd(func, count)
   for i=1,count do
@@ -11,7 +13,7 @@ local function multiAnd(func, count)
   return true
 end
 
-local function ifThenElse(sel, a, b)
+local function select(sel, a, b)
   if sel then return a end
   return b
 end
@@ -25,6 +27,17 @@ function turnTo(targetDir)
   elseif turns==3 then turtle.turnRight() end
 end
 
+function stepHorizontal(turn)
+  turnTo(turn)
+  return turtle.forward()
+end
+
+function step(dir)
+  if dir.x ~= 0 then return stepHorizontal(select(dir.x>0, 0, 2)) end
+  if dir.y ~= 0 then return select(dir.y>0, turtle.up, turtle.down)() end
+  if dir.z ~= 0 then return stepHorizontal(select(dir.z>0, 3, 1)) end
+end
+
 local function goLinear(count, step, turn)
   if turn then turnTo(turn) end
   return multiAnd(step, math.abs(count))
@@ -32,10 +45,27 @@ end
 
 function goto(targetPos)
   local delta = targetPos - position.getCurrent()
-  return goLinear(delta.x, turtle.forward, ifThenElse(delta.x>0, 0, 2)) and
-  goLinear(delta.y, ifThenElse(delta.y>0, turtle.up, turtle.down), nil) and
-  goLinear(delta.z, turtle.forward, ifThenElse(delta.z>0, 3, 1))
+  return goLinear(delta.x, turtle.forward, select(delta.x>0, 0, 2)) and
+  goLinear(delta.y, select(delta.y>0, turtle.up, turtle.down), nil) and
+  goLinear(delta.z, turtle.forward, select(delta.z>0, 3, 1))
 end
+
+local function map(v)
+  return worldmap.model[v]
+end
+
+function find(targetPos)
+  local dm = distmap:new(targetPos, map)
+  local change = function(v) dm:shrinkTo(v) end
+  worldmap.update.add(change)
+  while (targetPos - position.getCurrent()):length() > 0 do
+    dm:growTo(position.getCurrent())
+    local s = dm:getStep(position.getCurrent())
+    step(-s)
+  end
+  worldmap.update.remove(change)
+end
+
 
 
 __lunit = {}
