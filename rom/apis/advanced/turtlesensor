@@ -67,7 +67,7 @@ end
 
 local function senseBlock(side)
   local detect = detectBlock(side)
-  if not detect then return false end
+  if not detect then return detect end
   detect = compareBlock(side)
   return detect or true
 end
@@ -89,7 +89,7 @@ local function senseAll()
   for side, offset in pairs(position.sideVectors) do
     local result = sense(side)
     if result ~= nil then
-      local v = position.getCurrent() + offset
+      local v = position.getTransformation():apply(offset)
       blockSensed:call(v, result)
     end
   end

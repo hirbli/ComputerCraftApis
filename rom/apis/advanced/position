@@ -112,6 +112,10 @@ function getDirection()
   return location.value.pos.turn
 end
 
+function getTransformation()
+  return location.value.pos
+end
+
 __lunit = {}
 
 function __lunit.path()
