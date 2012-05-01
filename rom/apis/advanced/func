@@ -1,23 +1,55 @@
+local test = {}
+__lunit = test
+
 function fand(a, b) return a and b end
 function fadd(a, b) return a + b end
+function fsub(a, b) return a - b end
 
 function const(value)
   return function() return value end
 end
+
+function test.const()
+  local f = const(7)
+  lunit.areEqual(7, f())
+  lunit.areEqual(7, f(3))
+end
+
 function apply(func, value)
   return function(...)
     return func(value, ...)
   end
 end
+
+function test.apply()
+  local f = apply(fsub, 4)
+  lunit.areEqual(4, f(0))
+  lunit.areEqual(3, f(1))
+end
+
 function apply2(func, value)
   return function(p1, ...)
     return func(p1, value, ...)
   end
 end
-function concat(f1, f2)
-  return f1(f2)
+
+function test.apply2()
+  local f = apply2(fsub, 4)
+  lunit.areEqual(-4, f(0))
+  lunit.areEqual(-3, f(1))
 end
-function reduce(reduceFunction, startValue)
+
+function concat(f1, f2)
+  return function(...) return f1(f2(...)) end
+end
+
+function test.concat()
+  local f = concat(apply2(fsub, 1), apply2(fsub, 2))
+  lunit.areEqual(1, f(4))
+  lunit.areEqual(0, f(3))
+end
+
+function reduceX(reduceFunction, startValue)
   return function(values)
     local current = startValue
     for i, v in ipairs(values) do
@@ -26,6 +58,35 @@ function reduce(reduceFunction, startValue)
     return current
   end
 end
+
+function test.reduceX()
+  local f = reduceX(fadd, 1)
+  lunit.areEqual(1, f{})
+  lunit.areEqual(3, f{2})
+  lunit.areEqual(6, f{2, 3})
+end
+
+function reduce(reduceFunction)
+  return function(values)
+    local current
+    for i, v in ipairs(values) do
+      if i==1 then
+        current = v
+      else
+        current = reduceFunction(current, v)
+      end
+    end
+    return current
+  end
+end
+
+function test.reduce()
+  local f = reduce(fadd)
+  lunit.areEqual(nil, f{})
+  lunit.areEqual(2, f{2})
+  lunit.areEqual(5, f{2, 3})
+end
+
 function swap12(func)
   return function(a, b, ...) return func(b, a, ...) end
 end
