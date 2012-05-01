@@ -57,13 +57,13 @@ end
 function find(targetPos)
   local dm = distmap:new(targetPos, map)
   local change = function(v) dm:shrinkTo(v) end
-  worldmap.update.add(change)
+  worldmap.update:add(change)
   while (targetPos - position.getCurrent()):length() > 0 do
     dm:growTo(position.getCurrent())
     local s = dm:getStep(position.getCurrent())
-    step(-s)
+    if not step(-s) then break end
   end
-  worldmap.update.remove(change)
+  worldmap.update:remove(change)
 end
 
 
