@@ -65,8 +65,28 @@ function inst:getPath(source)
   return path
 end
 
+local function vectorLessEqual(a, b)
+  return a.x<=b.x and a.y<=b.y and a.z<=b.z
+end
+
+function box(lowerCorner, upperCorner, inside, outside)
+  return function(v)
+    local i = vectorLessEqual(lowerCorner, v) and vectorLessEqual(v, upperCorner)
+    if i then return inside else return outside end
+  end
+end
+
 local test = lunit.new(class)
 local func = loader.require.func
+
+function test.box()
+  local lc = vector.new(1, 2, 3)
+  local uc = vector.new(4, 4, 4)
+  local b = box(lc, uc, 1, 0)
+  lunit.areSame(1, b(lc))
+  lunit.areSame(1, b(uc))
+  lunit.areSame(0, b(uc + vector.new(1, 0, 0)))
+end
 
 function test.emptyRoom()
   local dm = class:new(vector.new(0, 0, 0), func.const(false))
@@ -79,6 +99,8 @@ function test.emptyRoom()
   lunit.areEqual(2, dm.distance[vector.new(1, 0, 0)])
   dm:shrinkOne()
   lunit.areEqual(1, dm.size)
+  local path = dm:getPath(vector.new(1, 1, 2))
+  lunit.areSame(nil, path)
   dm:growOne()
   dm:growOne()
   dm:growOne()
@@ -86,5 +108,19 @@ function test.emptyRoom()
   lunit.areEqual(5, dm.size)
   local path = dm:getPath(vector.new(1, 1, 2))
   lunit.areEqual(4, #path)
-  lunit.areEqual(vector.new(1, 1, 2), func.reduce(func.fadd, vector.new(0, 0, 0))(path))
+  lunit.areEqual(vector.new(1, 1, 2), func.reduce(func.fadd)(path))
+end
+
+function test.wall()
+  local wall = box(vector.new(-2, 2, -2), vector.new(2, 2, 2), true, false)
+  local dm = class:new(vector.new(0, 0, 0), wall)
+  local path
+  local target = vector.new(0, 4, 0)
+  repeat
+    dm:growOne()
+    path = dm:getPath(target)
+  until path
+  lunit.areEqual(10, #path)
+  lunit.areEqual(11, dm.size)
+  lunit.areEqual(target, func.reduce(func.fadd)(path))
 end
