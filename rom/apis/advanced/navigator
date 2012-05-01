@@ -1,5 +1,6 @@
 if not turtle then return false end
 
+loader.requireApi'turtleplus'
 local turtle = turtle
 local vector = vector
 local position = loader.require.position
@@ -39,6 +40,7 @@ function step(dir)
 end
 
 local function goLinear(count, step, turn)
+  if count==0 then return true end
   if turn then turnTo(turn) end
   return multiAnd(step, math.abs(count))
 end
@@ -56,12 +58,15 @@ end
 
 function find(targetPos)
   local dm = distmap:new(targetPos, map)
-  local change = function(v) dm:shrinkTo(v) end
+  local change = function(v) dm:shrinkTo(v);print('shrink '..dm.size) end
   worldmap.update:add(change)
-  while (targetPos - position.getCurrent()):length() > 0 do
-    dm:growTo(position.getCurrent())
-    local s = dm:getStep(position.getCurrent())
-    if not step(-s) then break end
+  while true do
+    local pos = position.getCurrent()
+    if (targetPos-pos):length() == 0 then break end
+    dm:growTo(pos)
+    local s = dm:getStep(pos)
+print('grow '..dm.size..' step '..tostring(s))
+    if not goto(pos-s) then break end
   end
   worldmap.update:remove(change)
 end
