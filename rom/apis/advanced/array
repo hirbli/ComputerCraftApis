@@ -4,8 +4,8 @@
 --   Provide multi-dimensional arrays.
 --   The key must be a sequence.
 
-local table = loader.requireApi("table")
-local object = loader.requireApi("object")
+local table = loader.require.table
+local object = loader.require.object
 
 local class, inst = object:createSubclass("array")
 loader.installAsApi(class)

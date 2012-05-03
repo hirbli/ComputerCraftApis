@@ -66,9 +66,9 @@ end
 
 do return false end -- not tested yet
 
-local minet = loader.requireApi("minet")
-local persist = loader.requireApi("persistency")
-local position = loader.requireApi("position")
+local minet = loader.require.minet
+local persist = loader.require.persistency
+local position = loader.require.position
 
 fixes = {}
 

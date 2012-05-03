@@ -9,10 +9,10 @@
 
 if not turtle then return false end
 
-local position = loader.requireApi("position")
-local table = loader.requireApi("table")
-local event = loader.requireApi("event")
-local tx = loader.requireApi("transformation")
+local position = loader.require.position
+local table = loader.require.table
+local event = loader.require.event
+local tx = loader.require.transformation
 
 local moved = event:new()
 local turned = event:new()

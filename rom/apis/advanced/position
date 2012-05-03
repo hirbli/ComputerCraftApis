@@ -19,8 +19,8 @@
 --   coordinate system abstraction with conversion from one to other
 --   abstraction of direction
 
-local persist = loader.requireApi("persistency")
-local tx = loader.requireApi("transformation")
+local persist = loader.require.persistency
+local tx = loader.require.transformation
 
 
 -- Relative Coordinate System ------------------------------------------

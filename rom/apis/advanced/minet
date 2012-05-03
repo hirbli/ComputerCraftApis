@@ -29,12 +29,12 @@
 --  add ack/timeout
 --  rpc?
 
-local event = loader.requireApi("event")
-local dispatcher = loader.requireApi("dispatcher")
-local table = loader.requireApi("table")
-local serializer = loader.requireApi("serializer")
-local timer = loader.requireApi("timer")
-local routingtable = loader.requireApi("routingtable")
+local event = loader.require.event
+local dispatcher = loader.require.dispatcher
+local table = loader.require.table
+local serializer = loader.require.serializer
+local timer = loader.require.timer
+local routingtable = loader.require.routingtable
 
 -- Periodic ------------------------------------------------------
 

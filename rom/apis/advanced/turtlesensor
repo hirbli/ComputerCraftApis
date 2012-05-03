@@ -6,13 +6,13 @@
 
 if not turtle then return false end
 
-loader.requireApi("turtleplus")
+loader.requireApi'turtleplus'
 local turtle = turtle
 local rednet = rednet
 local peripheral = peripheral
-local tx = loader.requireApi("transformation")
-local position = loader.requireApi("position")
-local event = loader.requireApi("event")
+local tx = loader.require.transformation
+local position = loader.require.position
+local event = loader.require.event
 
 
 -- Sensing blocks based on peripheral type -------------------------------
