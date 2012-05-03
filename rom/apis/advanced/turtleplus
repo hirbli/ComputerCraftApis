@@ -79,4 +79,5 @@ api.moved = moved
 api.turned = turned
 api.getSelectedSlot = getSelectedSlot
 
+loader.installAsApi(api)
 rawset(_G, "turtle", api)

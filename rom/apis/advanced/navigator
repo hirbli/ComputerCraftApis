@@ -1,7 +1,7 @@
 if not turtle then return false end
 
-loader.requireApi'turtleplus'
-local turtle = turtle
+
+local turtle = loader.require.turtleplus
 local vector = vector
 local position = loader.require.position
 local distmap = loader.require.distmap

@@ -6,8 +6,8 @@
 
 if not turtle then return false end
 
-loader.requireApi'turtleplus'
-local turtle = turtle
+
+local turtle = loader.require.turtleplus
 local rednet = rednet
 local peripheral = peripheral
 local tx = loader.require.transformation
