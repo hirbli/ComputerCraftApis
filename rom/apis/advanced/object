@@ -87,6 +87,7 @@ function metaclassvt:new(...)
   end 
   return o
 end
+metaclassvt.__call = metaclassvt.new
 
 -- Object, the Superclass of All Classes --------------------------
 
@@ -119,6 +120,8 @@ function test.instance()
   lunit.areSame(object, o:getClass())
   local o2 = object:new()
   lunit.areSame(true, o~=o2)
+  local o3 = object()
+  lunit.areSame(object, o3:getClass())
 end
 
 function test.subclass()
