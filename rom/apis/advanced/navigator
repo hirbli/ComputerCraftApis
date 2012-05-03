@@ -58,7 +58,7 @@ end
 
 function find(targetPos)
   local dm = distmap:new(targetPos, map)
-  local change = function(v) dm:shrinkTo(v);print('shrink '..dm.size) end
+  local change = function(v) dm:shrinkTo(v);print('shrink '..dm.size..' change '..tostring(v)) end
   worldmap.update:add(change)
   while true do
     local pos = position.getCurrent()
@@ -66,7 +66,8 @@ function find(targetPos)
     dm:growTo(pos)
     local s = dm:getStep(pos)
 print('grow '..dm.size..' step '..tostring(s))
-    if not goto(pos-s) then break end
+    local dest = pos - s
+    if not goto(dest) and not worldmap.map[dest] then break end
   end
   worldmap.update:remove(change)
 end
