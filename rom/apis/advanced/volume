@@ -69,7 +69,6 @@ function test.setandget()
     end
   end
   lunit.areSame(nil, a[vector.new(100, 0, 0)])
-  -- can be replaced by pairs(a) in lua 5.2
   for k, v in pairs(a) do
     lunit.areEqual(k.x*10+k.y, a[k])
   end
