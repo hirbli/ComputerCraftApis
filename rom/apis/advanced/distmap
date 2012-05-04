@@ -94,7 +94,6 @@ function box(lowerCorner, upperCorner, inside, outside)
 end
 
 local test = lunit.new(class)
-local func = loader.require.func
 
 function test.box()
   local lc = vector.new(1, 2, 3)
