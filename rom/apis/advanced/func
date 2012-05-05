@@ -1,3 +1,5 @@
+local iterator = loader.require.iterator
+
 local test = {}
 __lunit = test
 
@@ -68,13 +70,11 @@ end
 
 function reduce(reduceFunction)
   return function(values)
-    local current
-    for i, v in ipairs(values) do
-      if i==1 then
-        current = v
-      else
-        current = reduceFunction(current, v)
-      end
+    local it = type(values)=="func" and values or iterator.ivalues(values)
+    local current = it()
+    if current==nil then return end
+    for v in it do
+      current = reduceFunction(current, v)
     end
     return current
   end
