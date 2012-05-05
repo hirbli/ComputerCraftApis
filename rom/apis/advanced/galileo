@@ -67,7 +67,6 @@ end
 do return false end -- not tested yet
 
 local minet = loader.require.minet
-local persist = loader.require.persistency
 local position = loader.require.position
 
 fixes = {}
