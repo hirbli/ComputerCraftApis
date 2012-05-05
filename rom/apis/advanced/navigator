@@ -6,6 +6,9 @@ local vector = vector
 local position = loader.require.position
 local distmap = loader.require.distmap
 local worldmap = loader.require.worldmap
+local func = loader.require.func
+local volume = loader.require.volume
+local iterator = loader.require.iterator
 
 local function multiAnd(func, count)
   for i=1,count do
@@ -56,18 +59,29 @@ local function map(v)
   return worldmap.map[v]
 end
 
+
 function find(targetPos)
-  local dm = distmap:new(targetPos, map)
+  local dm = distmap(targetPos, map)
+  local path = volume()
   local change = function(v) dm:shrinkTo(v);print('shrink '..dm.size..' change '..tostring(v)) end
+  local function eval(v) return dm.distance[v] or 1e100 end
+  local function min(a, b) return eval(a)<eval(b) and a or b end
+  local findMin = func.reduce(min)
   worldmap.update:add(change)
   while true do
     local pos = position.getCurrent()
+    path[pos] = true
     if (targetPos-pos):length() == 0 then break end
     dm:growTo(pos)
-    local s = dm:getStep(pos)
+    local best = findMin(iterator.keys(path))
+    if best and eval(pos) > eval(best)+2 then
+      find(best)
+    else
+      local s = dm:getStep(pos)
 print('grow '..dm.size..' step '..tostring(s))
-    local dest = pos - s
-    if not goto(dest) and not worldmap.map[dest] then break end
+      local dest = pos - s
+      if not goto(dest) and not worldmap.map[dest] then break end
+    end
   end
   worldmap.update:remove(change)
 end
@@ -86,4 +100,9 @@ function test.goto()
   local res = goto(target)
   lunit.areSame(true, res)
   lunit.areEqual(target, position.getCurrent())
+end
+
+function test.find()
+  local target = vector.new(3, 2, 4)
+  find(target)
 end
