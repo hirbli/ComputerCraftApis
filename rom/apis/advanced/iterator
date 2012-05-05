@@ -121,10 +121,17 @@ end
 
 __lunit = {}
 
-function __lunit.toTable()
+function __lunit.toTableArray()
   local t = {a=1, b=2}
-  local t2 = toTable(pairs(t))
-  lunit.areEqual(t, t2)
+  lunit.areEqual(t, toTable(pairs(t)))
+  lunit.areEqual({"a", "b"}, toArray(keys(t)))
+  lunit.areEqual({1, 2}, toArray(values(t)))
+end
+
+function __lunit.toArray()
+  local t = {1, 7, 3}
+  lunit.areEqual(t, toTable(ipairs(t)))
+  lunit.areEqual(t, toArray(ivalues(t)))
 end
 
 function __lunit.select()
