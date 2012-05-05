@@ -42,7 +42,7 @@ local function kvToVector(key, val)
 end
 
 function inst:__pairs()
-  return iterator.select(kvToVector, pairs(self.array))
+  return iterator.select(kvToVector, iterator.pairs(self.array))
 end
 
 

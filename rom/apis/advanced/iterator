@@ -4,17 +4,103 @@
 --   Apply functions and filters to iterators.
 --   Inspired by .NET System.Linq
 
-function select(func, iterator, state, init)
+-- Definition:
+--   An iterator is simply a function.  This deviates from the lua
+--   definition where an iterator is a function, a state and a start
+--   value (see for...in...do or pairs()).
+--   Each call to the iterator function returns the next value of
+--   the sequence being iterated over.  Multiple values can be returned.
+--   The sequence end is indicated by nil as the first return value.
+--   An iterator can be used in a for loop like this:
+--     for x in iterator do
+--   or
+--     for x, y, z in iterator do
+
+-- API
+--   pairs(t)   - returns the sequence of key and value 
+--                pairs from table t (based on _G.pairs).
+--   keys(t)    - returns the sequence of keys from table t
+--                (same order as pairs).
+--   values(t)  - returns the sequence of values from table t
+--                (same order as pairs).
+--   ipairs(t)  - returns the sequence of index and value
+--                pairs from array t (based on _G.ipairs).
+--   ivalues(t) - returns the sequence of values in array t
+--                (same order as ipairs).
+--   range(first, last, inc)
+--              - returns the sequence of numbers starting at first, ending
+--                at last using the step size inc (defaults to 1)
+--
+--   select(func, i) - applies func to each element in sequence i.
+--   where(cond, i)  - returns subsequence of elements that satisfy cond.
+--   toTable(i)  - saves a sequence of key value pairs to a new table.
+--   toArray(i)  - saves a sequence of values into a new array.
+
+local table = loader.require.table
+
+function range(first, last, inc)
+  inc = inc or 1
+  return function()
+    local old = first
+    first = first + inc
+    return old<=last and old or nil
+  end
+end
+
+local function iterator(iterator, state, init)
   local position = init
   local extractPos = function(first, ...)
     position = first
     if first==nil then return end
-    return func(first, ...)
+    return first, ...
   end
-  local function newIterator(state)
+  return function()
     return extractPos(iterator(state, position))
   end
-  return newIterator, state, init
+end
+
+local origPairs = pairs
+function pairs(table)
+  return iterator(origPairs(table))
+end
+
+local origIPairs = ipairs
+function ipairs(table)
+  return iterator(origIPairs(table))
+end
+
+local function applyOrNil(func, first, ...)
+  if first==nil then return end
+  return func(first, ...)
+end
+
+function select(func, iterator)
+  return function()
+    return applyOrNil(func, iterator())
+  end
+end
+
+function keys(table)
+  return select(function(k, v) return k end, pairs(table))
+end
+
+function values(table)
+  return select(function(k, v) return v end, pairs(table))
+end
+
+function ivalues(table)
+  return select(function(i, v) return v end, ipairs(table))
+end
+
+function where(condition, iterator)
+  return function()
+    local current
+    repeat
+      current = {iterator()}
+      if current[1]==nil then return end
+    until condition(unpack(current))
+    return unpack(current)
+  end
 end
 
 function toTable(iterator, state, init)
@@ -23,6 +109,14 @@ function toTable(iterator, state, init)
     table[k] = v
   end
   return table
+end
+
+function toArray(iterator)
+  local t = {}
+  for v in iterator do
+    table.insert(t, v)
+  end
+  return t
 end
 
 __lunit = {}
@@ -40,4 +134,11 @@ function __lunit.select()
   lunit.areEqual({a=2, b=3}, t2)
   local t3 = toTable(select(inc, select(inc, pairs(t))))
   lunit.areEqual({a=3, b=4}, t3)
+end
+
+function __lunit.where()
+  local t = {1, 2, 5, 3, 1, 7}
+  local function cond(v) return v>2 end
+  local t2 = toArray(where(cond, ivalues(t)))
+  lunit.areEqual({5,3,7}, t2)
 end
