@@ -14,7 +14,7 @@ local function multiAnd(func, count)
   return true
 end
 
-local function select(sel, a, b)
+local function mux(sel, a, b)
   if sel then return a end
   return b
 end
@@ -34,9 +34,9 @@ function stepHorizontal(turn)
 end
 
 function step(dir)
-  if dir.x ~= 0 then return stepHorizontal(select(dir.x>0, 0, 2)) end
-  if dir.y ~= 0 then return select(dir.y>0, turtle.up, turtle.down)() end
-  if dir.z ~= 0 then return stepHorizontal(select(dir.z>0, 3, 1)) end
+  if dir.x ~= 0 then return stepHorizontal(mux(dir.x>0, 0, 2)) end
+  if dir.y ~= 0 then return mux(dir.y>0, turtle.up, turtle.down)() end
+  if dir.z ~= 0 then return stepHorizontal(mux(dir.z>0, 3, 1)) end
 end
 
 local function goLinear(count, step, turn)
@@ -47,9 +47,9 @@ end
 
 function goto(targetPos)
   local delta = targetPos - position.getCurrent()
-  return goLinear(delta.x, turtle.forward, select(delta.x>0, 0, 2)) and
-  goLinear(delta.y, select(delta.y>0, turtle.up, turtle.down), nil) and
-  goLinear(delta.z, turtle.forward, select(delta.z>0, 3, 1))
+  return goLinear(delta.x, turtle.forward, mux(delta.x>0, 0, 2)) and
+  goLinear(delta.y, mux(delta.y>0, turtle.up, turtle.down), nil) and
+  goLinear(delta.z, turtle.forward, mux(delta.z>0, 3, 1))
 end
 
 local function map(v)
