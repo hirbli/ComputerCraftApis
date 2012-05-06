@@ -8,12 +8,9 @@ loader.installAsApi(class)
 function inst:init(origin, occupy)
   self.origin = origin
   self.occupy = occupy
-  self.size = 1
+  self.size = 0
   self.distance = volume:new()  -- map vector --> distance
-  local v = volume:new()
-  v[origin] = false
-  self.field = {v}              -- map distance --> vector --> direction
-  self.distance[origin] = 1
+  self.field = {}               -- map distance --> vector --> direction
 end
 
 local directions = {
@@ -29,12 +26,17 @@ function inst:growOne()
   local size = self.size + 1
   local field = volume:new()
   local dist = self.distance
-  for v, _ in pairs(self.field[size-1]) do
-    for _, d in ipairs(directions) do
-      local n = v + d
-      if not self.occupy(n) and not dist[n] then
-        dist[n] = size
-        field[n] = d
+  if size == 1 then
+    field[self.origin] = false
+    dist[self.origin] = size
+  else
+    for v, _ in pairs(self.field[size-1]) do
+      for _, d in ipairs(directions) do
+        local n = v + d
+        if not self.occupy(n) and not dist[n] then
+          dist[n] = size
+          field[n] = d
+        end
       end
     end
   end
@@ -76,7 +78,6 @@ function inst:growTo(v)
 end
 
 function inst:shrinkTo(v)
-  if self.distance[v] == 1 then error("cant remove origin") end
   while self.distance[v] do
     self:shrinkOne()
   end
@@ -106,6 +107,9 @@ end
 
 function test.emptyRoom()
   local dm = class:new(vector.new(0, 0, 0), func.const(false))
+  lunit.areEqual(0, dm.size)
+  lunit.areEqual(0, #(dm.field))
+  dm:growOne()
   lunit.areEqual(1, dm.size)
   lunit.areEqual(1, dm.distance[vector.new(0, 0, 0)])
   lunit.areEqual(false, dm.field[1][vector.new(0, 0, 0)])
@@ -117,6 +121,10 @@ function test.emptyRoom()
   lunit.areEqual(1, dm.size)
   local path = dm:getPath(vector.new(1, 1, 2))
   lunit.areSame(nil, path)
+  dm:shrinkOne()
+  lunit.areEqual(0, dm.size)
+  lunit.areEqual(0, #(dm.field))
+  dm:growOne()
   dm:growOne()
   dm:growOne()
   dm:growOne()

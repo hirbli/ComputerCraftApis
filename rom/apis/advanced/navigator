@@ -71,16 +71,17 @@ function find(targetPos)
   while true do
     local pos = position.getCurrent()
     path[pos] = true
-    if (targetPos-pos):length() == 0 then break end
+    if (targetPos-pos):length() == 0 then break end  -- dest reached
     dm:growTo(pos)
     local best = findMin(iterator.keys(path))
     if best and eval(pos) > eval(best)+2 then
       find(best)
     else
       local s = dm:getStep(pos)
+      if not s then break end                        -- unreachable
 print('grow '..dm.size..' step '..tostring(s))
       local dest = pos - s
-      if not goto(dest) and not worldmap.map[dest] then break end
+      if not goto(dest) and not worldmap.map[dest] then break end  -- blocked
     end
   end
   worldmap.update:remove(change)
