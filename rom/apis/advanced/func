@@ -70,7 +70,7 @@ end
 
 function reduce(reduceFunction)
   return function(values)
-    local it = type(values)=="func" and values or iterator.ivalues(values)
+    local it = type(values)=="function" and values or iterator.ivalues(values)
     local current = it()
     if current==nil then return end
     for v in it do
@@ -85,6 +85,7 @@ function test.reduce()
   lunit.areEqual(nil, f{})
   lunit.areEqual(2, f{2})
   lunit.areEqual(5, f{2, 3})
+  lunit.areEqual(10, f(iterator.range(1, 4)))
 end
 
 function swap12(func)
