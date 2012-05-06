@@ -3,27 +3,53 @@ local iterator = loader.require.iterator
 local test = {}
 __lunit = test
 
-function fand(a, b) return a and b end
-function OR(a, b) return a or b end
+-- metatable operations as functions
 
-function fadd(a, b) return a + b end
-function fsub(a, b) return a - b end
-function fmul(a, b) return a * b end
-function fdiv(a, b) return a / b end
+function __add(a, b) return a + b end
+function __sub(a, b) return a - b end
+function __mul(a, b) return a * b end
+function __div(a, b) return a / b end
+function __mod(a, b) return a % b end
+function __pow(a, b) return a ^ b end
+function __unm(a) return -a end
+
+function __concat(a, b) return a..b end
+function __len(a) return #a end
+
+function __eq(a, b) return a == b end
+function __lt(a, b) return a < b end
+function __le(a, b) return a <= b end
+
+-- additions in the spirit of metatable operations
+
+function __neq(a, b) return a ~= b end
+function __gt(a, b) return a > b end
+function __ge(a, b) return a >= b end
+
+function __and(a, b) return a and b end
+function __or(a, b) return a or b end
+function __not(a) return not a end
+
+-- other random functions missing elsewhere
 
 function round(a) return math.floor(a+0.5) end
-function feq(a, b) return a == b end
-function fneq(a, b) return a ~= b end
-function lt(a, b) return a < b end
 
-function const(value)
-  return function() return value end
+
+function const(...)
+  local c = {...}
+  if #c==1 then
+    local c1 = c[1]
+    return function() return c1 end
+  end
+  return function() return unpack(c) end
 end
 
 function test.const()
   local f = const(7)
   lunit.areEqual(7, f())
   lunit.areEqual(7, f(3))
+  local f2 = const(2, 1)
+  lunit.areEqual({2, 1}, {f2()})
 end
 
 function apply(func, value)
@@ -33,7 +59,7 @@ function apply(func, value)
 end
 
 function test.apply()
-  local f = apply(fsub, 4)
+  local f = apply(__sub, 4)
   lunit.areEqual(4, f(0))
   lunit.areEqual(3, f(1))
 end
@@ -45,7 +71,7 @@ function apply2(func, value)
 end
 
 function test.apply2()
-  local f = apply2(fsub, 4)
+  local f = apply2(__sub, 4)
   lunit.areEqual(-4, f(0))
   lunit.areEqual(-3, f(1))
 end
@@ -55,7 +81,7 @@ function concat(f1, f2)
 end
 
 function test.concat()
-  local f = concat(apply2(fsub, 1), apply2(fsub, 2))
+  local f = concat(apply2(__sub, 1), apply2(__sub, 2))
   lunit.areEqual(1, f(4))
   lunit.areEqual(0, f(3))
 end
@@ -71,7 +97,7 @@ function reduceX(reduceFunction, startValue)
 end
 
 function test.reduceX()
-  local f = reduceX(fadd, 1)
+  local f = reduceX(__add, 1)
   lunit.areEqual(1, f{})
   lunit.areEqual(3, f{2})
   lunit.areEqual(6, f{2, 3})
@@ -90,16 +116,16 @@ function reduce(reduceFunction)
 end
 
 function test.reduce()
-  local f = reduce(fadd)
+  local f = reduce(__add)
   lunit.areEqual(nil, f{})
   lunit.areEqual(2, f{2})
   lunit.areEqual(5, f{2, 3})
   lunit.areEqual(10, f(iterator.range(1, 4)))
 end
 
-all = reduce(fand)
-any = reduce(OR)
-sum = reduce(fadd)
+all = reduce(__and)
+any = reduce(__or)
+sum = reduce(__add)
 
 function swap12(func)
   return function(a, b, ...) return func(b, a, ...) end

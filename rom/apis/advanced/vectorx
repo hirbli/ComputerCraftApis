@@ -53,16 +53,16 @@ local function operationVS(f)
   end
 end
 
-inst.__add = operationVV(func.fadd)
-inst.__sub = operationVV(func.fsub)
+inst.__add = operationVV(func.__add)
+inst.__sub = operationVV(func.__sub)
 
-inst.__mul = operationVS(func.fmul)
+inst.__mul = operationVS(func.__mul)
 inst.floor = operationVS(math.floor)
 inst.round = operationVS(func.round)
 
-inst.dot = func.concat(func.sum, operationVV(func.fmul))
-inst.__eq = func.concat(func.all, operationVV(func.feq))
-inst.__lt = func.concat(func.all, operationVV(func.lt))
+inst.dot = func.concat(func.sum, operationVV(func.__mul))
+inst.__eq = func.concat(func.all, operationVV(func.__eq))
+inst.__lt = func.concat(func.all, operationVV(func.__lt))
 function inst:length() return math.sqrt(self:dot(self)) end
 function inst:__unm() return self*-1 end
 function inst:normalize() return self*(1/self:length()) end
