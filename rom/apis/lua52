@@ -1,0 +1,17 @@
+-- lua 5.2 functionality for lua 5.1
+
+local oldPairs = pairs
+local function newPairs(t)
+  local mt = getmetatable(t)
+  local p = (mt and mt.__pairs) or oldPairs
+  return p(t)
+end
+rawset(_G, 'pairs', newPairs)
+
+local oldIPairs = ipairs
+local function newIPairs(t)
+  local mt = getmetatable(t)
+  local p = (mt and mt.__ipairs) or oldIPairs
+  return p(t)
+end
+rawset(_G, 'ipairs', newIPairs)
