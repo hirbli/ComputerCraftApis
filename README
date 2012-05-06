@@ -14,28 +14,40 @@ Directory /
 Directory /rom/apis
   loader        - advanced API loader that supports dependencies between APIs
   lunit         - minimal unit testing framework
+  lua52         - provide functionality missing from lua 5.1
 
-Directory /rom/apis/advanced
+Directory /rom/apis/advanced - Basic APIs
   autotable     - table that automatically initializes entries on first access
   dispatcher    - distributes osEvents to parties that have registered
   event         - redirect a call to all registered handlers
-  galileo       - European GPS (running in background with forwarding)
-  minet         - minecraft network stack (protocols, routing, broadcast, multicast)
   persistency   - store a table persistently in a file
-  routingtable  - routing logic for network stack
   serializer    - improved serializer (correct string handling, arrays)
   table         - table utilities (clone)
   timer         - abstraction of timer/alarm for multiple users
+  transformation- linear transformations on vectors
+  vectorx       - advaned vectors based on arrays
+  iterator      - working with sequences
+  func          - manipulating functions
+  volume        - map from vectors to values
+
+Directory /rom/apis/advanced - High Level APIs
+  minet         - minecraft network stack (protocols, routing, broadcast, multicast)
+  routingtable  - routing logic for network stack
+  galileo       - European GPS (running in background with forwarding)
   turtleplus    - adds hooks to turtle API and updates position API
   turtlesensor  - sense envirenment as turtle moves
-  transformation- linear transformations on vectors
   position      - API to maintain position of computer / turtle
+  worldmap      - records turtlesensor results
+  navigator     - navigate to a destination avoiding obstacles
 
 Directory /rom/programs
   galileo       - service program for getting status / configuring galileo API
   netdump       - listen to network traffic
   netstat       - show routing table
   ping          - test network connectivity
+
+Directory /rom/programs/turtle
+  navigate      - go to a destination avoiding obstacles
 
 Directory /rom/autorun
   init          - set up network
