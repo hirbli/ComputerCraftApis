@@ -38,7 +38,7 @@ local routingtable = loader.require.routingtable
 
 -- Periodic ------------------------------------------------------
 
-local periodic = event:new()
+local periodic = event()
 
 function runPeriodic()
   periodic:call()
@@ -49,8 +49,8 @@ end
 neighbors = {}
 local neighbors = neighbors
 local neighborTimeout = 10
-local neighborDiscovered = event:new()
-local neighborLost = event:new()
+local neighborDiscovered = event()
+local neighborLost = event()
 
 local function neighborAlive(node)
   if not neighbors[node] then neighborDiscovered:call(node) end
@@ -166,9 +166,9 @@ periodic:add(messagePeriodic)
 
 local myID = os.getComputerID()
 
-routing = routingtable:new(myID)
+routing = routingtable(myID)
 
-receiveEvent = event:new()
+receiveEvent = event()
 receiveProtocol = event:newTable()
 
 local function receiveLocal(header, payload)
@@ -303,5 +303,5 @@ end
 -- Initialization --------------------------------------------------
 
 dispatcher.filteredEvents.rednet_message:add(receiveMessageEvent)
-local periodicTimer = timer:new(runPeriodic)
+local periodicTimer = timer(runPeriodic)
 periodicTimer:startPeriodic(1)
