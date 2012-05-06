@@ -21,3 +21,15 @@ function copyNoOverwrite(src, dst)
     end
   end
 end
+
+function equals(t1, t2)
+  if t1==nil or t2==nil then return t1==t2 end
+  if type(t2)~="table" or type(t1)~="table" then error("table expected") end
+  for k, v in pairs(t1) do
+    if t2[k] ~= v then return false end
+  end
+  for k, v in pairs(t2) do
+    if t1[k] ~= v then return false end
+  end
+  return true
+end
