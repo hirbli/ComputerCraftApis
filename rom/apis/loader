@@ -17,6 +17,7 @@ apiInstalled = {}
 local apiCurrent
 local apiIncludeOriginal = {}
 local apiUseTable = {}
+local requireCallback = function() end
 
 local function installApi(name, env)
   local api = {}
@@ -50,6 +51,7 @@ local function loadApiFromFile(name, path)
 end
 
 local function loadApi(name, path)
+  if apiCurrent then requireCallback(apiCurrent, name) end
   if apiLoaded[name] then return end
   if apiLoading[name] then
     error("API "..name.." is required by "..apiCurrent.." which is being loaded indirectly by "..name" forming an unresolvable cycle.")
@@ -131,4 +133,8 @@ end
 function initializeApis()
   setApiPaths{"rom/apis/advanced"}
   loadAllApis()
+end
+
+function setRequireCallback(func)
+  requireCallback = func
 end

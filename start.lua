@@ -74,7 +74,17 @@ print("load basics")
 for _, a in ipairs({"loader", "lunit", "vector", "lua52"}) do
   loadApi(a, "rom/apis/"..a)
 end
+
 print("initialize APIs")
+local dep = io.open("dependencies.gv", "w")
+dep:write('digraph dependencies {\ngraph [rankdir = LR]\n')
+local function require(a, b)
+  dep:write('"'..a..'" -> "'..b..'"\n')
+end
+loader.setRequireCallback(require)
 loader.initializeApis()
+dep:write('}\n')
+dep:close()
+os.execute("dot -Tsvg -o dependencies.svg dependencies.gv")
 print("running unit tests")
 lunit.run()
