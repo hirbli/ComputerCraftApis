@@ -1,0 +1,99 @@
+-- n-dimensional vector stored as array
+
+local object = loader.require.object
+local iterator = loader.require.iterator
+local func = loader.require.func
+
+local class, inst = object:createSubclass'vectorx'
+loader.installAsApi(class)
+local test = lunit.new(class)
+
+function inst:init(first, ...)
+  local t = type(first)
+  local it
+  if t=="function" then it = first
+  elseif t=="table" then it = iterator.ivalues(first)
+  else it = iterator.ivalues{first, ...} end
+  for v in it do
+    table.insert(self, v)
+  end
+end
+
+function test:init()
+  local v1 = class(1)
+  lunit.areEqual(1, v1[1])
+  local v2 = class(2, 3)
+  lunit.areEqual(2, v2[1])
+  lunit.areEqual(3, v2[2])
+  local v3 = class{2, 3, 4}
+  lunit.areEqual(2, v3[1])
+  lunit.areEqual(4, v3[3])
+  local v4 = class(iterator.range(2, 4))
+  lunit.areEqual(v3, v4)
+end
+
+local function elementWise(f)
+  return function(a, b)
+    if #a ~= #b then error("vector length mismatch") end
+    local r = {}
+    for i = 1, #a do
+      table.insert(r, f(a[i], b[i]))
+    end
+    return class(r)
+  end
+end
+
+local function elementWise1(f)
+  return function(self, ...)
+    local r = {}
+    for i = 1, #self do
+      table.insert(r, f(self[i], ...))
+    end
+    return class(r)
+  end
+end
+
+inst.__add = elementWise(func.fadd)
+inst.__sub = elementWise(func.fsub)
+inst.elementMul = elementWise(func.fmul)
+
+inst.__mul = elementWise1(func.fmul)
+inst.floor = elementWise1(math.floor)
+inst.round = elementWise1(func.round)
+
+local sum = func.reduce(func.fadd)
+function inst:dot(o) return sum(self:elementMul(o)) end
+function inst:length() return math.sqrt(self:dot(self)) end
+function inst:__unm() return self*-1 end
+function inst:normalize() return self*(1/self:length()) end
+function inst.cross(a, b)
+  if #a ~= 3 or #b ~= 3 then error("cross product only defined for vectors of length 3") end
+  return class(
+    a[2]*b[3] - a[3]*b[2],
+    a[3]*b[1] - a[1]*b[3],
+    a[1]*b[2] - a[2]*b[1])
+end
+function inst:__tostring()
+  return "("..table.concat(self, ",")..")"
+end
+
+function test.ops()
+  local x = class(1, 3)
+  local y = class(4, 7)
+  lunit.areEqual(class(5, 10), x+y)
+  lunit.areEqual(class(-3, -4), x-y)
+  lunit.areEqual(class(4, 21), x:elementMul(y))
+  lunit.areEqual(25, x:dot(y))
+  lunit.areEqual(5, class(3, 4):length())
+  lunit.areEqual(class(2, 6), x*2)
+  lunit.areEqual(class(-1, -3), -x)
+  lunit.areEqual(class(1, 2), class(1.499, 1.5):round())
+  lunit.areEqual("(1,3)", tostring(x))
+end
+
+function test.cross()
+  local x = class(1, 0, 0)
+  local y = class(0, 1, 0)
+  lunit.areEqual(class(0, 0, 1), x:cross(y))
+  lunit.areEqual(class(0, 0, -1), y:cross(x))
+end
