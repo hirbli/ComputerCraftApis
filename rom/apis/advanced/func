@@ -5,10 +5,12 @@ __lunit = test
 
 function fand(a, b) return a and b end
 function OR(a, b) return a or b end
+
 function fadd(a, b) return a + b end
 function fsub(a, b) return a - b end
 function fmul(a, b) return a * b end
 function fdiv(a, b) return a / b end
+
 function round(a) return math.floor(a+0.5) end
 function feq(a, b) return a == b end
 function fneq(a, b) return a ~= b end

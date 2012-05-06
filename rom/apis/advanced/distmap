@@ -124,7 +124,7 @@ function test.emptyRoom()
   lunit.areEqual(5, dm.size)
   local path = dm:getPath(vector.new(1, 1, 2))
   lunit.areEqual(4, #path)
-  lunit.areEqual(vector.new(1, 1, 2), func.reduce(func.fadd)(path))
+  lunit.areEqual(vector.new(1, 1, 2), func.sum(path))
 end
 
 function test.wall()
@@ -136,5 +136,5 @@ function test.wall()
   path = dm:getPath(target)
   lunit.areEqual(10, #path)
   lunit.areEqual(11, dm.size)
-  lunit.areEqual(target, func.reduce(func.fadd)(path))
+  lunit.areEqual(target, func.sum(path))
 end

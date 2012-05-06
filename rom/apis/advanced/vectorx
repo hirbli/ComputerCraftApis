@@ -60,7 +60,7 @@ inst.__mul = operationVS(func.fmul)
 inst.floor = operationVS(math.floor)
 inst.round = operationVS(func.round)
 
-inst.dot = func.concat(func.reduce(func.fadd), operationVV(func.fmul))
+inst.dot = func.concat(func.sum, operationVV(func.fmul))
 inst.__eq = func.concat(func.all, operationVV(func.feq))
 inst.__lt = func.concat(func.all, operationVV(func.lt))
 function inst:length() return math.sqrt(self:dot(self)) end
