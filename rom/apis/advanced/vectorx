@@ -55,29 +55,48 @@ end
 
 inst.__add = operationVV(func.fadd)
 inst.__sub = operationVV(func.fsub)
--- inst.elementMul = operationVV(func.fmul)
 
 inst.__mul = operationVS(func.fmul)
 inst.floor = operationVS(math.floor)
 inst.round = operationVS(func.round)
 
-local sum = func.reduce(func.fadd)
 inst.dot = func.concat(func.reduce(func.fadd), operationVV(func.fmul))
+inst.__eq = func.concat(func.all, operationVV(func.feq))
+inst.__lt = func.concat(func.all, operationVV(func.lt))
 function inst:length() return math.sqrt(self:dot(self)) end
 function inst:__unm() return self*-1 end
 function inst:normalize() return self*(1/self:length()) end
+
 function inst.cross(a, b)
-  if #a ~= 3 or #b ~= 3 then error("cross product only defined for vectors of length 3") end
+  if #a ~= 3 or #b ~= 3 then error("cross product only defined for vectors of length 3.") end
   return class(
     a[2]*b[3] - a[3]*b[2],
     a[3]*b[1] - a[1]*b[3],
     a[1]*b[2] - a[2]*b[1])
 end
+
 function inst:__tostring()
   return "("..table.concat(self, ",")..")"
 end
-inst.__eq = func.concat(func.all, operationVV(func.feq))
-inst.__lt = func.concat(func.all, operationVV(func.lt))
+
+function inst:toVector()
+  if #self ~= 3 then error("Regular vectors only defined for length 3.") end
+  return vector.new(unpack(self))
+end
+
+function class:fromVector(v)
+  return class(v.x, v.y, v.z)
+end
+
+function class:zero(len)
+  return class(iterator.first(len, func.const(0)))
+end
+
+function class:unit(len, i)
+  local unit = iterator.toArray(iterator.first(len, func.const(0)))
+  unit[i] = 1
+  return class(unit)
+end
 
 function test.ops()
   local x = class(1, 3)
@@ -101,4 +120,21 @@ function test.cross()
   local y = class(0, 1, 0)
   lunit.areEqual(class(0, 0, 1), x:cross(y))
   lunit.areEqual(class(0, 0, -1), y:cross(x))
+end
+
+function test.unit()
+  local len = 3
+  local x = class:zero(len)
+  local u2 = class:unit(len, len)
+  for i = 1,len do
+    local u = class:unit(len, i)
+    lunit.areEqual(1, u:length())
+    lunit.areEqual(0, u:dot(u2))
+    lunit.areEqual(1, u:cross(u2):length())
+    lunit.areSame(false, u<u2)
+    lunit.areSame(false, u>u2)
+    x = x + u
+    lunit.areEqual(i, x:dot(x))
+    u2 = u
+  end
 end

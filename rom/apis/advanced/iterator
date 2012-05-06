@@ -35,6 +35,7 @@
 --   where(cond, i)  - returns subsequence of elements that satisfy cond.
 --   toTable(i)  - saves a sequence of key value pairs to a new table.
 --   toArray(i)  - saves a sequence of values into a new array.
+--   first(n, i) - return first n elements of sequence.
 
 local table = loader.require.table
 
@@ -117,6 +118,14 @@ function toArray(iterator)
     table.insert(t, v)
   end
   return t
+end
+
+function first(n, it)
+  return function()
+    if n==0 then return end
+    n = n - 1
+    return it()
+  end
 end
 
 __lunit = {}
