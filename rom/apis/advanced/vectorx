@@ -32,7 +32,7 @@ function test:init()
   lunit.areEqual(v3, v4)
 end
 
-local function elementWise(f)
+local function operationVV(f)
   return function(a, b)
     if #a ~= #b then error("vector length mismatch") end
     local r = {}
@@ -43,7 +43,7 @@ local function elementWise(f)
   end
 end
 
-local function elementWise1(f)
+local function operationVS(f)
   return function(self, ...)
     local r = {}
     for i = 1, #self do
@@ -53,16 +53,16 @@ local function elementWise1(f)
   end
 end
 
-inst.__add = elementWise(func.fadd)
-inst.__sub = elementWise(func.fsub)
-inst.elementMul = elementWise(func.fmul)
+inst.__add = operationVV(func.fadd)
+inst.__sub = operationVV(func.fsub)
+-- inst.elementMul = operationVV(func.fmul)
 
-inst.__mul = elementWise1(func.fmul)
-inst.floor = elementWise1(math.floor)
-inst.round = elementWise1(func.round)
+inst.__mul = operationVS(func.fmul)
+inst.floor = operationVS(math.floor)
+inst.round = operationVS(func.round)
 
 local sum = func.reduce(func.fadd)
-function inst:dot(o) return sum(self:elementMul(o)) end
+inst.dot = func.concat(func.reduce(func.fadd), operationVV(func.fmul))
 function inst:length() return math.sqrt(self:dot(self)) end
 function inst:__unm() return self*-1 end
 function inst:normalize() return self*(1/self:length()) end
@@ -76,19 +76,24 @@ end
 function inst:__tostring()
   return "("..table.concat(self, ",")..")"
 end
+inst.__eq = func.concat(func.all, operationVV(func.feq))
+inst.__lt = func.concat(func.all, operationVV(func.lt))
 
 function test.ops()
   local x = class(1, 3)
   local y = class(4, 7)
   lunit.areEqual(class(5, 10), x+y)
   lunit.areEqual(class(-3, -4), x-y)
-  lunit.areEqual(class(4, 21), x:elementMul(y))
   lunit.areEqual(25, x:dot(y))
   lunit.areEqual(5, class(3, 4):length())
   lunit.areEqual(class(2, 6), x*2)
   lunit.areEqual(class(-1, -3), -x)
   lunit.areEqual(class(1, 2), class(1.499, 1.5):round())
   lunit.areEqual("(1,3)", tostring(x))
+  lunit.areSame(true, x == x)
+  lunit.areSame(false, x == y)
+  lunit.areSame(true, x ~= y)
+  lunit.areSame(true, x < y)
 end
 
 function test.cross()

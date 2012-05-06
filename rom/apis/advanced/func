@@ -4,11 +4,15 @@ local test = {}
 __lunit = test
 
 function fand(a, b) return a and b end
+function OR(a, b) return a or b end
 function fadd(a, b) return a + b end
 function fsub(a, b) return a - b end
 function fmul(a, b) return a * b end
 function fdiv(a, b) return a / b end
 function round(a) return math.floor(a+0.5) end
+function feq(a, b) return a == b end
+function fneq(a, b) return a ~= b end
+function lt(a, b) return a < b end
 
 function const(value)
   return function() return value end
@@ -90,6 +94,10 @@ function test.reduce()
   lunit.areEqual(5, f{2, 3})
   lunit.areEqual(10, f(iterator.range(1, 4)))
 end
+
+all = reduce(fand)
+any = reduce(OR)
+sum = reduce(fadd)
 
 function swap12(func)
   return function(a, b, ...) return func(b, a, ...) end
