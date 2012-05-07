@@ -3,7 +3,7 @@ local routing = minet.routing
 
 local function showNode(node)
   if routing.gateways[node] then
-    print(string.format("%4d: %4d %2d", node, routing.gateways[node], routing.hops[node]))
+    print(string.format("%4d: %4d %2d", node, routing.gateways[node], #(routing.hops[node])))
   else
     print(string.format("%4d:    -  -", node))
   end

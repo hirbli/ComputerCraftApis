@@ -1,5 +1,4 @@
 -- Minecraft Networking (MiNet)
-
 -- Purpose:
 --   based on rednet messaging provide the following services
 --   message encapsulation for strings and table messages
@@ -268,7 +267,7 @@ local function routingSendTable()
 end
 
 local function routingNeighbor(node)
-  routing:addRouting(node, {[node]=0})
+  routing:addRouting(node, {[node]={}})
   routingSendTable()
 end
 

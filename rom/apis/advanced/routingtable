@@ -2,52 +2,67 @@
 
 local table = loader.require.table
 local object = loader.require.object
+local func = loader.require.func
 
-local class, vtable = object:createSubclass("routingtable")
+local class, inst = object:createSubclass("routingtable")
 loader.installAsApi(class)
 
-function vtable:getRoute(dst)
+function inst:getRoute(dst)
   return self.gateways[dst]
 end
 
-function vtable:getRouteInt(dst)
-  if self.myID==dst then return dst, -1 end
-  if self.routingDistMaps[dst] then return dst, 0 end
-  local dist
-  local node
-  for n, map in pairs(self.routingDistMaps) do
-    local ndist = map[dst]
-    if ndist and (not dist or ndist<dist) then
-      node,dist = n, ndist
-    end
+local function contains(map, val)
+  for _, v in pairs(map) do
+    if v==val then return true end
   end
-  return node, dist
+  return false
 end
 
-function vtable:updateRoutingTable(changes)
+function inst:getRouteInt(dst)
+  if self.myID==dst then return dst, nil end
+  if self.routingDistMaps[dst] then return dst, {} end
+  local hops
+  local node
+  for n, map in pairs(self.routingDistMaps) do
+    local nhops = map[dst]
+    if nhops and not contains(nhops, self.myID) and (not hops or #nhops<#hops) then
+      node,hops = n, nhops
+    end
+  end
+  return node, hops
+end
+
+local function append(t, value)
+  if not t then return {} end
+  t = table.clone(t)
+  table.insert(t, value)
+  return t
+end
+
+function inst:updateRoutingTable(changes)
   local changed = false
-  local function assign(table, key, value)
-    if table[key]==value then return end
+  local function assign(table, key, value, eq)
+    if eq(table[key], value) then return end
     changed = true
     table[key] = value
   end
   for dst, _ in pairs(changes) do
     local node, hops = self:getRouteInt(dst)
-    if node then hops = hops + 1 end
-    assign(self.gateways, dst, node)
-    assign(self.hops, dst, hops)
+    if node then hops = append(hops, node) end
+    assign(self.gateways, dst, node, func.__eq)
+    assign(self.hops, dst, hops, table.equals)
   end
   return changed
 end
 
-function vtable:routingMarkChanges(changes, distMap)
+function inst:routingMarkChanges(changes, distMap)
   if not distMap then return end
   for node, _ in pairs(distMap) do
     changes[node] = true
   end
 end
 
-function vtable:addRouting(node, distMap)
+function inst:addRouting(node, distMap)
   local changes = {[node]=true}
   self:routingMarkChanges(changes, self.routingDistMaps[node])
   self.routingDistMaps[node] = distMap
@@ -56,11 +71,11 @@ function vtable:addRouting(node, distMap)
   return changed
 end
 
-function vtable:removeRouting(node)
+function inst:removeRouting(node)
   self:addRouting(node, nil)
 end
 
-function vtable:init(myID)
+function inst:init(myID)
   self.myID = myID
   -- for each destination store next hop and number of hops to destination
   self.gateways = {}
@@ -72,26 +87,37 @@ end
 
 local test = lunit.new(class)
 
+-- test network
+-- 6 - 1 - 5 - 4
+-- 6 - 2 - 5 - 3
+--     2 ----- 3
+-- node 6 is new
+-- 1) add 6 - 1
+-- 2) add 6 - 2
+-- 3) remove 5 - 3
+
 function test.routing()
-  local rt = class:new(6)
-  local function check(expected, dest, hops)
+  local rt = class(6)
+  local function check(dest, expected, hops)
     lunit.areEqual(expected, rt:getRoute(dest))
     if hops then lunit.areEqual(hops, rt.hops[dest]) end
   end
-  check(6, 6, 0)
-  check(nil, 1)
-  check(nil, 2)
-  lunit.areEqual(true, rt:addRouting(1, {[2]=2, [3]=2, [4]=2}))
-  check(1, 1, 1)
-  check(1, 2, 3)
-  lunit.areEqual(true, rt:addRouting(2, {[3]=1, [4]=3}))
-  check(1, 1)
-  check(2, 2)
-  check(2, 3)
-  check(1, 4)
-  lunit.areEqual(false, rt:addRouting(2, {[3]=1, [4]=4}))
-  check(1, 1)
-  check(2, 2)
-  check(2, 3)
-  check(1, 4)
+  check(6, 6, {})
+  check(1)
+  check(2)
+  lunit.areEqual(true, rt:addRouting(1, {[2]={5}, [3]={5}, [4]={5}}))
+  check(1, 1, {1})
+  check(2, 1, {5, 1})
+  check(3, 1, {5, 1})
+  lunit.areEqual(true, rt:addRouting(2, {[3]={}, [4]={5}, [7]={6}}))
+  check(1, 1, {1})
+  check(2, 2, {2})
+  check(3, 2, {2})
+  check(4, 1, {5, 1})
+  check(7)
+  lunit.areEqual(false, rt:addRouting(1, {[2]={5}, [4]={5}, [3]={2, 5}}))
+  check(1, 1, {1})
+  check(2, 2, {2})
+  check(3, 2, {2})
+  check(4, 1, {5, 1})
 end
