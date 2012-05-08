@@ -63,6 +63,7 @@ inst.round = operationVS(func.round)
 inst.dot = func.concat(func.sum, operationVV(func.__mul))
 inst.__eq = func.concat(func.all, operationVV(func.__eq))
 inst.__lt = func.concat(func.all, operationVV(func.__lt))
+inst.__le = func.concat(func.all, operationVV(func.__le))
 function inst:length() return math.sqrt(self:dot(self)) end
 function inst:__unm() return self*-1 end
 function inst:normalize() return self*(1/self:length()) end
@@ -113,6 +114,9 @@ function test.ops()
   lunit.areSame(false, x == y)
   lunit.areSame(true, x ~= y)
   lunit.areSame(true, x < y)
+  lunit.areSame(true, x <= y)
+  lunit.areSame(false, x < class(2, 2))
+  lunit.areSame(false, x <= class(2, 2))
 end
 
 function test.cross()
