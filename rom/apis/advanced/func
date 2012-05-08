@@ -88,8 +88,9 @@ end
 
 function reduceX(reduceFunction, startValue)
   return function(values)
+    local it = type(values)=="function" and values or iterator.ivalues(values)
     local current = startValue
-    for i, v in ipairs(values) do
+    for v in it do
       current = reduceFunction(current, v)
     end
     return current
@@ -126,6 +127,7 @@ end
 all = reduce(__and)
 any = reduce(__or)
 sum = reduce(__add)
+count = reduceX(function(cnt) return cnt+1 end, 0)
 
 function swap12(func)
   return function(a, b, ...) return func(b, a, ...) end
