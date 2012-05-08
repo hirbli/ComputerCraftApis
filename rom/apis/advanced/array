@@ -4,6 +4,7 @@
 local object = loader.require.object
 local iterator = loader.require.iterator
 local table = loader.require.table
+local func = loader.require.func
 
 local class, inst = object:createSubclass("array")
 loader.installAsApi(class)
@@ -70,6 +71,12 @@ function inst:__pairs()
   return coroutine.wrap(startKeys)
 end
 
+class.volume, volume = class:createSubclass'volume'
+
+function volume:init()
+  self.super.init(self, 3)
+end
+
 
 local test = lunit.new(class)
 
@@ -89,7 +96,13 @@ function test.setandget()
   end
   lunit.areSame(nil, a[{100, 0}])
   lunit.areSame(nil, a[{0, 100}])
+  local count = 0
   for k, v in pairs(a) do
     lunit.areEqual(k[1]*10+k[2], a[k])
+    count = count + 1
   end
+  lunit.areEqual(16, count)
+  a[{0, 0}] = nil
+  lunit.areSame(nil, a[{0, 0}])
+  lunit.areEqual(15, func.count(iterator.keys(a)))
 end
