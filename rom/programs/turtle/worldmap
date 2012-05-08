@@ -1,5 +1,6 @@
 local position = loader.require.position
 local worldmap = loader.require.worldmap
+local vectorx = loader.require.vectorx
 
 local function center(str, len)
    local pad = (len - string.len(str))/2
@@ -12,7 +13,7 @@ for y=-1, 1 do
   for x=-1, 1 do
     local line = string.rep('  ', 1-x)
     for z=-1, 1 do
-      local v = position.getTransformation():apply(vector.new(-x, -y, z))
+      local v = position.getTransformation():apply(vectorx(-x, -y, z))
       line = line..' '..center(tostring(worldmap.map[v]), 8)
     end
     print(line)

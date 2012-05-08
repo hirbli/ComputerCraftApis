@@ -2,6 +2,7 @@
 --  relative setup
 
 local galileo = loader.require.galileo
+local vectorx = loader.require.vectorx
 
 local function usage(message)
   if message then print("Error: "..message) end
@@ -31,13 +32,13 @@ if command=="status" then
 elseif command=="set" then
   if #args~=6 then return usage("set requires 5 parameters") end
   local _, t, id, x, y, z = ...
-  galileo.setPosition(t, id, vector.new(x, y, z))
+  galileo.setPosition(t, id, vectorx(x, y, z))
 elseif command=="global" then
   if #args~=4 then return usage("set requires 3 parameters") end
   local _, x, y, z = ...
-  galileo.setPosition("g", 0, vector.new(x, y, z))
+  galileo.setPosition("g", 0, vectorx(x, y, z))
 elseif command=="region" then
-  galileo.setPosition("r", os.getComupterID(), vector.new(0, 0, 0))
+  galileo.setPosition("r", os.getComupterID(), vectorx(0, 0, 0))
 elseif command=="relative" then
   return usage("not yet implemented")
 else

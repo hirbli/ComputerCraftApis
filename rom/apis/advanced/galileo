@@ -68,6 +68,7 @@ do return false end -- not tested yet
 
 local minet = loader.require.minet
 local position = loader.require.position
+local vectorx = loader.require.vectorx
 
 fixes = {}
 
@@ -158,7 +159,7 @@ local function sendPosition()
   local cs = position.value.cs
   if cs.t=="l" then return end
   local pos = position.value.pos
-  minet.sendMessage(minet.bcast, proto, {cs={cs.t, cs.id}, pos={pos.x, pos.y, pos.z}})
+  minet.sendMessage(minet.bcast, proto, {cs={cs.t, cs.id}, pos=pos})
 end
 
 function setPosition(cstype, csid, pos)
@@ -171,7 +172,7 @@ end
 local function receivePosition(header, payload)
   if payload.cs[1]~="g" then return end  -- for now only global coordinate system
   local pos = payload.pos
-  local fix = {id=header.src, position=vector.new(pos[1], pos[2], pos[3]), distance = header.distance}
+  local fix = {id=header.src, position=vectorx(pos), distance = header.distance}
   addFix(fix)
   local myPos = calculatePosition()
   if not myPos then return end

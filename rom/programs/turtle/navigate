@@ -1,4 +1,5 @@
 local navigator = loader.require.navigator
+local vectorx = loader.require.vectorx
 
 local tArgs = { ... }
 if #tArgs ~= 3 then
@@ -10,4 +11,4 @@ local x = tonumber(tArgs[1])
 local y = tonumber(tArgs[2])
 local z = tonumber(tArgs[3])
 
-navigator.find(vector.new(x, y, z))
+navigator.find(vectorx(x, y, z))

@@ -3,7 +3,7 @@
 if not turtle then return false end
 
 local turtlesensor = loader.require.turtlesensor
-local volume = loader.require.volume
+local volume = loader.require.array.volume
 local event = loader.require.event
 
 map = volume:new()

@@ -1,6 +1,7 @@
 local object = loader.require.object
-local volume = loader.require.volume
+local volume = loader.require.array.volume
 local func = loader.require.func
+local vectorx = loader.require.vectorx
 
 local class, inst = object:createSubclass'distmap'
 loader.installAsApi(class)
@@ -9,22 +10,22 @@ function inst:init(origin, occupy)
   self.origin = origin
   self.occupy = occupy
   self.size = 0
-  self.distance = volume:new()  -- map vector --> distance
+  self.distance = volume()      -- map vector --> distance
   self.field = {}               -- map distance --> vector --> direction
 end
 
 local directions = {
-  vector.new(1, 0, 0),
-  vector.new(-1, 0, 0),
-  vector.new(0, 1, 0),
-  vector.new(0, -1, 0),
-  vector.new(0, 0, 1),
-  vector.new(0, 0, -1)
+  vectorx(1, 0, 0),
+  vectorx(-1, 0, 0),
+  vectorx(0, 1, 0),
+  vectorx(0, -1, 0),
+  vectorx(0, 0, 1),
+  vectorx(0, 0, -1)
 }
 
 function inst:growOne()
   local size = self.size + 1
-  local field = volume:new()
+  local field = volume()
   local dist = self.distance
   if size == 1 then
     field[self.origin] = false
@@ -89,7 +90,7 @@ end
 
 function box(lowerCorner, upperCorner, inside, outside)
   return function(v)
-    local i = vectorLessEqual(lowerCorner, v) and vectorLessEqual(v, upperCorner)
+    local i = lowerCorner<=v and v<=upperCorner
     if i then return inside else return outside end
   end
 end
@@ -97,29 +98,29 @@ end
 local test = lunit.new(class)
 
 function test.box()
-  local lc = vector.new(1, 2, 3)
-  local uc = vector.new(4, 4, 4)
+  local lc = vectorx(1, 2, 3)
+  local uc = vectorx(4, 4, 4)
   local b = box(lc, uc, 1, 0)
   lunit.areSame(1, b(lc))
   lunit.areSame(1, b(uc))
-  lunit.areSame(0, b(uc + vector.new(1, 0, 0)))
+  lunit.areSame(0, b(uc + vectorx(1, 0, 0)))
 end
 
 function test.emptyRoom()
-  local dm = class:new(vector.new(0, 0, 0), func.const(false))
+  local dm = class(vectorx(0, 0, 0), func.const(false))
   lunit.areEqual(0, dm.size)
   lunit.areEqual(0, #(dm.field))
   dm:growOne()
   lunit.areEqual(1, dm.size)
-  lunit.areEqual(1, dm.distance[vector.new(0, 0, 0)])
-  lunit.areEqual(false, dm.field[1][vector.new(0, 0, 0)])
+  lunit.areEqual(1, dm.distance[vectorx(0, 0, 0)])
+  lunit.areEqual(false, dm.field[1][vectorx(0, 0, 0)])
   dm:growOne()
   lunit.areEqual(2, dm.size)
-  lunit.areEqual(1, dm.distance[vector.new(0, 0, 0)])
-  lunit.areEqual(2, dm.distance[vector.new(1, 0, 0)])
+  lunit.areEqual(1, dm.distance[vectorx(0, 0, 0)])
+  lunit.areEqual(2, dm.distance[vectorx(1, 0, 0)])
   dm:shrinkOne()
   lunit.areEqual(1, dm.size)
-  local path = dm:getPath(vector.new(1, 1, 2))
+  local path = dm:getPath(vectorx(1, 1, 2))
   lunit.areSame(nil, path)
   dm:shrinkOne()
   lunit.areEqual(0, dm.size)
@@ -130,16 +131,16 @@ function test.emptyRoom()
   dm:growOne()
   dm:growOne()
   lunit.areEqual(5, dm.size)
-  local path = dm:getPath(vector.new(1, 1, 2))
+  local path = dm:getPath(vectorx(1, 1, 2))
   lunit.areEqual(4, #path)
-  lunit.areEqual(vector.new(1, 1, 2), func.sum(path))
+  lunit.areEqual(vectorx(1, 1, 2), func.sum(path))
 end
 
 function test.wall()
-  local wall = box(vector.new(-2, 2, -2), vector.new(2, 2, 2), true, false)
-  local dm = class:new(vector.new(0, 0, 0), wall)
+  local wall = box(vectorx(-2, 2, -2), vectorx(2, 2, 2), true, false)
+  local dm = class(vectorx(0, 0, 0), wall)
   local path
-  local target = vector.new(0, 4, 0)
+  local target = vectorx(0, 4, 0)
   dm:growTo(target)
   path = dm:getPath(target)
   lunit.areEqual(10, #path)

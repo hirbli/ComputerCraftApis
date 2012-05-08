@@ -1,5 +1,5 @@
 local turtle = turtle
-local vector = vector
+local vectorx = loader.require.vectorx
 local position = loader.require.position
 local movement = loader.require.movement
 
@@ -115,6 +115,6 @@ print("Hirbli...")
 
 hPattern(sizeForward, sizeRight, true, forward)
 print("position = "..tostring(position.getCurrent()))
-movement.goto(vector.new(0,0,0))
+movement.goto(vectorx(0,0,0))
 movement.turnTo(0)
 print("End")

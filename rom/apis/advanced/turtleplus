@@ -9,6 +9,7 @@
 
 if not turtle then return false end
 
+local vectorx = loader.require.vectorx
 local position = loader.require.position
 local table = loader.require.table
 local event = loader.require.event
@@ -18,10 +19,10 @@ local moved = event:new()
 local turned = event:new()
 
 local dirVectors = {
-  forward = vector.new(1, 0, 0),
-  back = vector.new(-1, 0, 0),
-  up = vector.new(0, 1, 0),
-  down = vector.new(0, -1, 0)
+  forward = vectorx(1, 0, 0),
+  back = vectorx(-1, 0, 0),
+  up = vectorx(0, 1, 0),
+  down = vectorx(0, -1, 0)
 }
 
 local function wrapMove(move, name)

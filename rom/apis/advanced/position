@@ -19,6 +19,7 @@
 --   coordinate system abstraction with conversion from one to other
 --   abstraction of direction
 
+local vectorx = loader.require.vectorx
 local persist = loader.require.persistency
 local tx = loader.require.transformation
 
@@ -63,12 +64,12 @@ local frontBack = -1
 if turtle then frontBack = 1 end
 
 sideVectors = {
-  front = vector.new(frontBack, 0, 0),
-  back = vector.new(-frontBack, 0, 0),
-  top = vector.new(0, 1, 0),
-  bottom = vector.new(0, -1, 0),
-  left = vector.new(0, 0, 1),
-  right = vector.new(0, 0, -1)
+  front = vectorx(frontBack, 0, 0),
+  back = vectorx(-frontBack, 0, 0),
+  top = vectorx(0, 1, 0),
+  bottom = vectorx(0, -1, 0),
+  left = vectorx(0, 0, 1),
+  right = vectorx(0, 0, -1)
 }
 
 
@@ -105,7 +106,7 @@ function stopMoving(success)
 end
 
 function getCurrent()
-  return location.value.pos:apply(vector.new(0,0,0))
+  return location.value.pos:apply(vectorx(0,0,0))
 end
 
 function getDirection()
@@ -120,7 +121,7 @@ __lunit = {}
 
 function __lunit.path()
   location.value = initialLocation
-  local fw = tx:move(vector.new(1, 0, 0))
+  local fw = tx:move(vectorx(1, 0, 0))
   startMoving(fw)
   stopMoving(false)
   startMoving(fw)
@@ -130,7 +131,7 @@ function __lunit.path()
   stopMoving(true)
   startMoving(fw)
   stopMoving(true)
-  lunit.areEqual(vector.new(1, 0, -1), getCurrent())
-  lunit.areEqual(vector.new(1, 0, -2), location.value.pos:apply(vector.new(1, 0, 0)))
+  lunit.areEqual(vectorx(1, 0, -1), getCurrent())
+  lunit.areEqual(vectorx(1, 0, -2), location.value.pos:apply(vectorx(1, 0, 0)))
   lunit.areEqual(1, getDirection())
 end
