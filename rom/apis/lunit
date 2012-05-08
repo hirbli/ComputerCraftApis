@@ -1,3 +1,8 @@
+local oldError = error
+local function error(msg)
+  oldError(debug.traceback(msg))
+end
+
 function areSame(expected, actual)
   if expected == actual then return end
   error("Values not equal: expected="..tostring(expected)..", actual="..tostring(actual))
@@ -27,13 +32,24 @@ function countFunction()
   return table
 end
 
+local passCount
+local failCount
+
 local function runTest(name, func)
-  if true then
+  if false then
     print(name)
     func()
   else
-    local success, error = pcall(func)
-    print(success, name, error)
+    io.output():write(name..':')
+    local success, msg = pcall(func)
+    if success then
+      print(' pass')
+      passCount = passCount + 1
+    else
+      failCount = failCount + 1
+      print(' FAIL')
+      print(msg)
+    end
   end
 end
 
@@ -67,6 +83,8 @@ function new(table)
 end
 
 function run(start)
+  passCount = 0
+  failCount = 0
   if not start then
     runTable(_G, {}, "_G")
   elseif type(start)=="table" then
@@ -74,4 +92,5 @@ function run(start)
   else
     error("start must be nil or a table")
   end
+  print('Result: total='..(passCount+failCount)..', pass='..passCount..', fail='..failCount..'.')
 end
