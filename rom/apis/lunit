@@ -1,6 +1,5 @@
-local oldError = error
-local function error(msg)
-  oldError(debug.traceback(msg))
+local function errorStack(msg)
+  return debug.traceback(msg)
 end
 
 function areSame(expected, actual)
@@ -41,7 +40,7 @@ local function runTest(name, func)
     func()
   else
     io.output():write(name..':')
-    local success, msg = pcall(func)
+    local success, msg = xpcall(func, errorStack)
     if success then
       print(' pass')
       passCount = passCount + 1
